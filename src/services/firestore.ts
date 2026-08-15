@@ -20,6 +20,10 @@ import {
   ref,
 } from "firebase/storage";
 
+import type {
+  ClientActiveProgram,
+} from "../types/clientPrograms";
+
 import { db, storage } from "./firebase";
 
 import type {
@@ -39,6 +43,11 @@ import type {
 import type {
   ProgramAssignment,
 } from "../types/programAssignments";
+
+import type {
+  WorkoutSession,
+  WorkoutSessionStatus,
+} from "../types/workout";
 
 /* ============================================================
    USERS / CLIENT PROFILES
@@ -599,22 +608,17 @@ export async function assignProgramToClient(
       clientId,
     );
 
-  const batch =
-    writeBatch(db);
+  const batch = writeBatch(db);
 
   /*
-   * Only one program should be active
-   * for a client at a time.
+   * Mark the previous active assignment
+   * as replaced.
    */
 
   for (
-    const assignment of
-      existingAssignments
+    const assignment of existingAssignments
   ) {
-    if (
-      assignment.status ===
-      "active"
-    ) {
+    if (assignment.status === "active") {
       batch.update(
         doc(
           db,
@@ -623,20 +627,25 @@ export async function assignProgramToClient(
         ),
         {
           status: "replaced",
-          updatedAt:
-            serverTimestamp(),
+          updatedAt: serverTimestamp(),
         },
       );
     }
   }
 
-  const assignmentRef =
-    doc(
-      collection(
-        db,
-        "programAssignments",
-      ),
-    );
+  /*
+   * Create a new assignment record.
+   */
+
+  const assignmentRef = doc(
+    collection(
+      db,
+      "programAssignments",
+    ),
+  );
+
+  const startDateTimestamp =
+    Timestamp.fromDate(startDate);
 
   batch.set(
     assignmentRef,
@@ -644,21 +653,62 @@ export async function assignProgramToClient(
       clientId,
       programId,
       assignedBy,
-      startDate:
-        Timestamp.fromDate(
-          startDate,
-        ),
+      startDate: startDateTimestamp,
       status: "active",
-      createdAt:
-        serverTimestamp(),
-      updatedAt:
-        serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+  );
+
+  /*
+   * Create/update the direct current-program
+   * mapping for this client.
+   */
+
+  const activeProgramRef = doc(
+    db,
+    "clientActivePrograms",
+    clientId,
+  );
+
+  const activeProgram: ClientActiveProgram = {
+    clientId,
+    programId,
+    assignmentId: assignmentRef.id,
+    startDate: startDateTimestamp,
+    status: "active",
+    updatedAt: undefined,
+  };
+
+  batch.set(
+    activeProgramRef,
+    {
+      ...activeProgram,
+      updatedAt: serverTimestamp(),
     },
   );
 
   await batch.commit();
 
   return assignmentRef.id;
+}
+
+export async function getClientActiveProgram(
+  clientId: string,
+): Promise<ClientActiveProgram | null> {
+  const snapshot = await getDoc(
+    doc(
+      db,
+      "clientActivePrograms",
+      clientId,
+    ),
+  );
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return snapshot.data() as ClientActiveProgram;
 }
 /* ============================================================
    CLIENT PROGRAM
@@ -670,18 +720,40 @@ export async function getActiveProgramForClient(
   assignment: ProgramAssignment;
   program: TrainingProgram | null;
 } | null> {
-  const assignment =
-    await getActiveProgramAssignment(
+  const activeProgram =
+    await getClientActiveProgram(
       clientId,
     );
 
-  if (!assignment) {
+  if (!activeProgram) {
     return null;
   }
 
-  const program = await getTrainingProgram(
-    assignment.programId,
-  );
+  const assignmentSnapshot =
+    await getDoc(
+      doc(
+        db,
+        "programAssignments",
+        activeProgram.assignmentId,
+      ),
+    );
+
+  if (!assignmentSnapshot.exists()) {
+    return null;
+  }
+
+  const assignment: ProgramAssignment = {
+    id: assignmentSnapshot.id,
+    ...(assignmentSnapshot.data() as Omit<
+      ProgramAssignment,
+      "id"
+    >),
+  };
+
+  const program =
+    await getTrainingProgram(
+      activeProgram.programId,
+    );
 
   return {
     assignment,
@@ -721,18 +793,220 @@ export async function getProgramDayExercises(
     exercise: Exercise | null;
   }>
 > {
-  const results =
-    await Promise.all(
-      day.exercises.map(
-        async (programExercise) => ({
-          programExercise,
-          exercise:
-            await getExercise(
-              programExercise.exerciseId,
-            ),
-        }),
+  const validExercises =
+    Array.isArray(day.exercises)
+      ? day.exercises.filter(
+          (programExercise) =>
+            programExercise &&
+            typeof programExercise ===
+              "object" &&
+            typeof programExercise.exerciseId ===
+              "string" &&
+            programExercise.exerciseId.trim()
+              .length > 0,
+        )
+      : [];
+
+  return Promise.all(
+    validExercises.map(
+      async (programExercise) => ({
+        programExercise,
+        exercise:
+          await getExercise(
+            programExercise.exerciseId,
+          ),
+      }),
+    ),
+  );
+}
+
+/* ============================================================
+   WORKOUT SESSIONS
+   ============================================================ */
+
+export async function createWorkoutSession(
+  session: Omit<
+    WorkoutSession,
+    "id" | "createdAt" | "updatedAt"
+  >,
+): Promise<string> {
+  const sessionRef = doc(
+    collection(
+      db,
+      "workoutSessions",
+    ),
+  );
+
+  await setDoc(
+    sessionRef,
+    {
+      ...session,
+      createdAt:
+        serverTimestamp(),
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
+
+  return sessionRef.id;
+}
+
+export async function getWorkoutSession(
+  sessionId: string,
+): Promise<WorkoutSession | null> {
+  const snapshot = await getDoc(
+    doc(
+      db,
+      "workoutSessions",
+      sessionId,
+    ),
+  );
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+    ...(snapshot.data() as Omit<
+      WorkoutSession,
+      "id"
+    >),
+  };
+}
+
+export async function updateWorkoutSession(
+  sessionId: string,
+  updates: Partial<
+    Omit<
+      WorkoutSession,
+      "id" | "createdAt" | "updatedAt"
+    >
+  >,
+): Promise<void> {
+  const cleanUpdates =
+    Object.fromEntries(
+      Object.entries(updates).filter(
+        ([, value]) =>
+          value !== undefined,
       ),
     );
 
-  return results;
+  await updateDoc(
+    doc(
+      db,
+      "workoutSessions",
+      sessionId,
+    ),
+    {
+      ...cleanUpdates,
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
+}
+
+export async function completeWorkoutSession(
+  sessionId: string,
+): Promise<void> {
+  await updateDoc(
+    doc(
+      db,
+      "workoutSessions",
+      sessionId,
+    ),
+    {
+      status: "completed" satisfies WorkoutSessionStatus,
+      mode: "complete",
+      completedAt:
+        serverTimestamp(),
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
+}
+
+export interface WorkoutSetRecord {
+  id: string;
+
+  exerciseId: string;
+  setNumber: number;
+
+  targetReps?: number;
+  targetDurationSeconds?: number;
+
+  actualReps?: number;
+  actualDurationSeconds?: number;
+
+  completed: boolean;
+
+  startedAt?: unknown;
+  completedAt?: unknown;
+
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+export async function createWorkoutSet(
+  sessionId: string,
+  set: Omit<
+    WorkoutSetRecord,
+    "id" | "createdAt" | "updatedAt"
+  >,
+): Promise<string> {
+  const setRef = doc(
+    collection(
+      db,
+      "workoutSessions",
+      sessionId,
+      "sets",
+    ),
+  );
+
+  await setDoc(
+    setRef,
+    {
+      ...set,
+      createdAt:
+        serverTimestamp(),
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
+
+  return setRef.id;
+}
+
+export async function updateWorkoutSet(
+  sessionId: string,
+  setId: string,
+  updates: Partial<
+    Omit<
+      WorkoutSetRecord,
+      "id" | "createdAt" | "updatedAt"
+    >
+  >,
+): Promise<void> {
+  const cleanUpdates =
+    Object.fromEntries(
+      Object.entries(updates).filter(
+        ([, value]) =>
+          value !== undefined,
+      ),
+    );
+
+  await updateDoc(
+    doc(
+      db,
+      "workoutSessions",
+      sessionId,
+      "sets",
+      setId,
+    ),
+    {
+      ...cleanUpdates,
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
 }

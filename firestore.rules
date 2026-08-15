@@ -1,63 +1,297 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
-    function isActive() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active'; }
+
+    /* ============================================================
+       HELPERS
+       ============================================================ */
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.role == 'admin';
+    }
+
+    function isActive() {
+      return signedIn()
+        && get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.status == 'active';
+    }
+
+    /*
+     * Checks whether the authenticated client has an
+     * active-program mapping document.
+     */
+    function hasActiveProgramMapping() {
+      return isActive()
+        && exists(
+          /databases/$(database)/documents/clientActivePrograms/$(request.auth.uid)
+        );
+    }
+
+    /*
+     * Checks whether the authenticated client is currently
+     * assigned to the requested program.
+     */
+    function hasAssignedProgram(programId) {
+      return hasActiveProgramMapping()
+        && get(
+          /databases/$(database)/documents/clientActivePrograms/$(request.auth.uid)
+        ).data.programId == programId;
+    }
+
+    /* ============================================================
+       USERS
+       ============================================================ */
 
     match /users/{uid} {
-      allow create: if signedIn() && request.auth.uid == uid
-                    && request.resource.data.role == 'client'
-                    && request.resource.data.status == 'pending';
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow update: if isAdmin() || (request.auth.uid == uid
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.status == resource.data.status);
-      allow delete: if isAdmin();
+
+      allow create:
+        if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == 'client'
+        && request.resource.data.status == 'pending';
+
+      allow read:
+        if signedIn()
+        && (
+          request.auth.uid == uid
+          || isAdmin()
+        );
+
+      allow update:
+        if isAdmin()
+        || (
+          request.auth.uid == uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status
+        );
+
+      allow delete:
+        if isAdmin();
     }
+
+    /* ============================================================
+       CLIENT PROFILES
+       ============================================================ */
 
     match /clientProfiles/{uid} {
-      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
-      allow create, update: if isAdmin() || (isActive() && request.auth.uid == uid);
-      allow delete: if isAdmin();
+
+      allow read:
+        if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == uid
+        );
+
+      allow create, update:
+        if isAdmin()
+        || (
+          isActive()
+          && request.auth.uid == uid
+        );
+
+      allow delete:
+        if isAdmin();
     }
 
-    match /workoutSessions/{sessionId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isActive() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if isAdmin() || (isActive() && resource.data.uid == request.auth.uid);
-      match /sets/{setId} {
-        allow read: if isAdmin() || (signedIn() && get(/databases/$(database)/documents/workoutSessions/$(sessionId)).data.uid == request.auth.uid);
-        allow create, update: if isAdmin() || (isActive() && get(/databases/$(database)/documents/workoutSessions/$(sessionId)).data.uid == request.auth.uid);
-        allow delete: if isAdmin();
-      }
-    }
+    /* ============================================================
+       WORKOUT SESSIONS
+       ============================================================ */
+
+   match /workoutSessions/{sessionId} {
+
+  allow read:
+    if isAdmin()
+    || (
+      isActive()
+      && resource.data.clientId == request.auth.uid
+    );
+
+  allow create:
+    if isActive()
+    && request.resource.data.clientId == request.auth.uid;
+
+  allow update, delete:
+    if isAdmin()
+    || (
+      isActive()
+      && resource.data.clientId == request.auth.uid
+    );
+
+  match /sets/{setId} {
+
+    allow read:
+      if isAdmin()
+      || (
+        isActive()
+        && get(
+          /databases/$(database)/documents/workoutSessions/$(sessionId)
+        ).data.clientId == request.auth.uid
+      );
+
+    allow create, update:
+      if isAdmin()
+      || (
+        isActive()
+        && get(
+          /databases/$(database)/documents/workoutSessions/$(sessionId)
+        ).data.clientId == request.auth.uid
+      );
+
+    allow delete:
+      if isAdmin();
+  }
+}
+
+    /* ============================================================
+       COACH CONFIG
+       ============================================================ */
 
     match /coachConfigs/{configId} {
-      allow read: if isActive() || isAdmin();
-      allow write: if isAdmin();
+
+      allow read:
+        if isActive() || isAdmin();
+
+      allow write:
+        if isAdmin();
     }
+
+    /* ============================================================
+       EXERCISES
+       ============================================================ */
+
     match /exercises/{exerciseId} {
-  allow read: if isAdmin() || isActive();
-  allow create, update, delete: if isAdmin();
-}
-match /trainingPrograms/{programId} {
-  allow read: if isAdmin();
-  allow create, update, delete: if isAdmin();
-}
 
-match /programDays/{dayId} {
-  allow read: if isAdmin();
-  allow create, update, delete: if isAdmin();
-}
+      /*
+       * Exercises are reference data.
+       * Admins can manage them.
+       * Active clients can read them.
+       */
 
-match /programAssignments/{assignmentId} {
-  allow read: if isAdmin() || (signedIn() && resource.data.clientId == request.auth.uid);
-  allow create: if isActive() && request.resource.data.clientId == request.auth.uid;
-  allow update, delete: if isAdmin() || (isActive() && resource.data.clientId == request.auth.uid);
-}
+      allow read:
+        if isAdmin() || isActive();
 
-    match /{document=**} { allow read, write: if false; }
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* ============================================================
+       TRAINING PROGRAMS
+       ============================================================ */
+
+    match /trainingPrograms/{programId} {
+
+      /*
+       * Admins:
+       * full access.
+       *
+       * Clients:
+       * read only their currently assigned program.
+       */
+
+      allow read:
+        if isAdmin()
+        || hasAssignedProgram(programId);
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* ============================================================
+       PROGRAM DAYS
+       ============================================================ */
+
+    match /programDays/{dayId} {
+
+      /*
+       * Admins:
+       * full access.
+       *
+       * Clients:
+       * may read a day only when its programId matches
+       * their current active program.
+       */
+
+      allow read:
+        if isAdmin()
+        || (
+          hasActiveProgramMapping()
+          && get(
+            /databases/$(database)/documents/clientActivePrograms/$(request.auth.uid)
+          ).data.programId == resource.data.programId
+        );
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* ============================================================
+       PROGRAM ASSIGNMENTS
+       ============================================================ */
+
+    match /programAssignments/{assignmentId} {
+
+      /*
+       * Admins:
+       * full access.
+       *
+       * Clients:
+       * read only assignments belonging to themselves.
+       *
+       * Clients cannot create, modify, or delete assignments.
+       */
+
+      allow read:
+        if isAdmin()
+        || (
+          isActive()
+          && resource.data.clientId == request.auth.uid
+        );
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* ============================================================
+       CLIENT ACTIVE PROGRAM
+       ============================================================ */
+
+    match /clientActivePrograms/{clientId} {
+
+      /*
+       * Admins:
+       * full access.
+       *
+       * Client:
+       * may read only its own current-program mapping.
+       */
+
+      allow read:
+        if isAdmin()
+        || (
+          isActive()
+          && request.auth.uid == clientId
+        );
+
+      allow create, update, delete:
+        if isAdmin();
+    }
+
+    /* ============================================================
+       DEFAULT DENY
+       ============================================================ */
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
