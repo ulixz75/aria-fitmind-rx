@@ -17,6 +17,7 @@ export interface ClientProfile {
 
   displayName: string;
   email: string;
+  preferredLanguage?: "es" | "en" | "auto";
 
   // Personal information
   sex?: "male" | "female" | "prefer_not_to_say";

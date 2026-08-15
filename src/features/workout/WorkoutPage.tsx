@@ -9,18 +9,24 @@ import {
   Play,
   ShieldAlert,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import { useAuth } from "../../context/AuthContext";
 
 import {
+  completeWorkoutSession,
+  createWorkoutSession,
   getActiveProgramForClient,
+  getClientProfile,
   getProgramDayExercises,
   listProgramDays,
-  createWorkoutSession,
   updateWorkoutSession,
-  completeWorkoutSession,
 } from "../../services/firestore";
 
 import type { Exercise } from "../../types/exercises";
@@ -35,9 +41,17 @@ import type {
   WorkoutSession,
 } from "../../types/workout";
 
+import type {
+  ClientProfile,
+} from "../../types/models";
+
+import type {
+  RealtimeCoachContext,
+} from "../../services/realtimeCoach";
+
 import {
   ARIA_MODEL,
-  ARIA_INSTRUCTIONS,
+  createRealtimeSession,
 } from "../../services/realtimeCoach";
 
 interface SessionExercise {
@@ -50,25 +64,14 @@ interface SessionDay {
   exercises: SessionExercise[];
 }
 
-/*
- * TEMPORARY DEVELOPMENT VALUES
- *
- * These will later come from the client's
- * subscription / entitlement.
- *
- * Workout:
- * 30 minutes
- *
- * ARIA voice:
- * 10 minutes
- */
 const DEFAULT_WORKOUT_DURATION_SECONDS =
   30 * 60;
 
 const DEFAULT_ARIA_VOICE_DURATION_SECONDS =
   10 * 60;
 
-const ARIA_WARNING_SECONDS = 5 * 60;
+const ARIA_WARNING_SECONDS =
+  5 * 60;
 
 type PageStatus =
   | "loading"
@@ -83,7 +86,14 @@ export function WorkoutPage() {
   const { firebaseUser } = useAuth();
 
   const [status, setStatus] =
-    useState<PageStatus>("loading");
+    useState<PageStatus>(
+      "loading",
+    );
+
+  const [clientProfile, setClientProfile] =
+    useState<ClientProfile | null>(
+      null,
+    );
 
   const [message, setMessage] =
     useState(
@@ -106,7 +116,9 @@ export function WorkoutPage() {
     );
 
   const [sessionId, setSessionId] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null,
+    );
 
   const [elapsedSeconds, setElapsedSeconds] =
     useState(0);
@@ -119,22 +131,37 @@ export function WorkoutPage() {
     setCurrentExerciseIndex,
   ] = useState(0);
 
-  const [currentSetNumber, setCurrentSetNumber] =
-    useState(1);
+  const [
+    currentSetNumber,
+    setCurrentSetNumber,
+  ] = useState(1);
 
-  const [restRemainingSeconds, setRestRemainingSeconds] =
-    useState(0);
+  const [
+    restRemainingSeconds,
+    setRestRemainingSeconds,
+  ] = useState(0);
 
-  const [ariaWarningSent, setAriaWarningSent] =
-    useState(false);
+  const [
+    ariaWarningSent,
+    setAriaWarningSent,
+  ] = useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    manualControlsOpen,
+    setManualControlsOpen,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null,
+  );
 
   /*
-   * ----------------------------------------------------------
-   * LOAD ACTIVE PROGRAM
-   * ----------------------------------------------------------
+   * ==========================================================
+   * LOAD ACTIVE PROGRAM + CLIENT PROFILE
+   * ==========================================================
    */
 
   useEffect(() => {
@@ -142,29 +169,51 @@ export function WorkoutPage() {
 
     if (!uid) {
       setStatus("error");
+
       setError(
         "You must be signed in to start a workout.",
       );
+
       return;
     }
 
     let cancelled = false;
 
-    async function loadWorkout(clientId: string) {
+    async function loadWorkout(
+      clientId: string,
+    ) {
       setStatus("loading");
       setError(null);
 
       try {
-        const activeProgram =
-          await getActiveProgramForClient(
+        const [
+          activeProgram,
+          loadedClientProfile,
+        ] = await Promise.all([
+          getActiveProgramForClient(
             clientId,
-          );
+          ),
+          getClientProfile(
+            clientId,
+          ),
+        ]);
 
-        if (!activeProgram?.program) {
+        if (!cancelled) {
+          setClientProfile(
+            loadedClientProfile,
+          );
+        }
+
+        if (
+          !activeProgram?.program
+        ) {
           if (!cancelled) {
             setStatus("ready");
+
             setProgram(null);
+
             setSessionDay(null);
+
             setMessage(
               "No active training program is assigned to you yet.",
             );
@@ -188,10 +237,11 @@ export function WorkoutPage() {
          * Temporary behavior:
          * use the first scheduled day.
          *
-         * The real Workout Session Engine will later
-         * determine the actual day based on schedule/history.
+         * The session scheduler will replace this later.
          */
-        const selectedDay = days[0];
+
+        const selectedDay =
+          days[0];
 
         const exerciseViews =
           await getProgramDayExercises(
@@ -205,7 +255,8 @@ export function WorkoutPage() {
 
           setSessionDay({
             day: selectedDay,
-            exercises: exerciseViews,
+            exercises:
+              exerciseViews,
           });
 
           setStatus("ready");
@@ -240,9 +291,9 @@ export function WorkoutPage() {
   }, [firebaseUser?.uid]);
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * CURRENT EXERCISE
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   const currentExercise =
@@ -255,28 +306,36 @@ export function WorkoutPage() {
     null;
 
   /*
-   * ----------------------------------------------------------
-   * FORMATTERS
-   * ----------------------------------------------------------
+   * ==========================================================
+   * FORMATTER
+   * ==========================================================
    */
 
-  function formatTime(seconds: number) {
-    const safeSeconds = Math.max(
-      0,
-      Math.floor(seconds),
-    );
+  function formatTime(
+    seconds: number,
+  ) {
+    const safeSeconds =
+      Math.max(
+        0,
+        Math.floor(seconds),
+      );
 
-    const minutes = Math.floor(
-      safeSeconds / 60,
-    );
+    const minutes =
+      Math.floor(
+        safeSeconds / 60,
+      );
 
     const remaining =
       safeSeconds % 60;
 
-    return `${String(minutes).padStart(
+    return `${String(
+      minutes,
+    ).padStart(
       2,
       "0",
-    )}:${String(remaining).padStart(
+    )}:${String(
+      remaining,
+    ).padStart(
       2,
       "0",
     )}`;
@@ -301,10 +360,91 @@ export function WorkoutPage() {
     DEFAULT_ARIA_VOICE_DURATION_SECONDS -
       ARIA_WARNING_SECONDS;
 
+  const voiceMode =
+    status === "active" &&
+    session?.mode !== "visual";
+
+  const visualMode =
+    session?.mode === "visual" ||
+    ariaElapsedSeconds >=
+      DEFAULT_ARIA_VOICE_DURATION_SECONDS;
+
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
+   * REALTIME CONTEXT
+   * ==========================================================
+   */
+
+  function buildRealtimeContext():
+    RealtimeCoachContext | null {
+    if (
+      !program ||
+      !sessionDay ||
+      !currentExercise
+    ) {
+      return null;
+    }
+
+    return {
+      preferredLanguage:
+        clientProfile?.preferredLanguage ??
+        "auto",
+
+      clientName:
+        clientProfile?.displayName ??
+        firebaseUser?.displayName ??
+        "Client",
+
+      fitnessLevel:
+        clientProfile?.fitnessLevel,
+
+      primaryGoals:
+        clientProfile?.primaryGoals ??
+        [],
+
+      programName:
+        program.name,
+
+      dayName:
+        sessionDay.day.name,
+
+      currentExercise:
+        currentExercise.exercise
+          ?.name ??
+        "Current exercise",
+
+      currentSet:
+        currentSetNumber,
+
+      totalSets:
+        currentConfig?.sets ??
+        0,
+
+      targetReps:
+        currentConfig?.reps,
+
+      targetDurationSeconds:
+        currentConfig?.durationSeconds,
+
+      restSeconds:
+        currentConfig?.restSeconds ??
+        0,
+
+      ariaRemainingSeconds,
+
+      workoutRemainingSeconds,
+
+      mode:
+        visualMode
+          ? "visual"
+          : "voice",
+    };
+  }
+
+  /*
+   * ==========================================================
    * WORKOUT TIMER
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   useEffect(() => {
@@ -314,64 +454,62 @@ export function WorkoutPage() {
       return;
     }
 
-    const timer = window.setInterval(
-      () => {
-        setElapsedSeconds(
-          (current) => {
-            const next =
-              current + 1;
+    const timer =
+      window.setInterval(
+        () => {
+          setElapsedSeconds(
+            (current) => {
+              const next =
+                current + 1;
 
-            if (
-              next >=
-              DEFAULT_WORKOUT_DURATION_SECONDS
-            ) {
-              setStatus("complete");
-              return DEFAULT_WORKOUT_DURATION_SECONDS;
-            }
+              if (
+                next >=
+                DEFAULT_WORKOUT_DURATION_SECONDS
+              ) {
+                setStatus(
+                  "complete",
+                );
 
-            return next;
-          },
-        );
+                return DEFAULT_WORKOUT_DURATION_SECONDS;
+              }
 
-        setAriaElapsedSeconds(
-          (current) => {
-            const next =
-              current + 1;
+              return next;
+            },
+          );
 
-            if (
-              next >=
-              DEFAULT_ARIA_VOICE_DURATION_SECONDS
-            ) {
-              return DEFAULT_ARIA_VOICE_DURATION_SECONDS;
-            }
+          setAriaElapsedSeconds(
+            (current) => {
+              const next =
+                current + 1;
 
-            return next;
-          },
-        );
+              return Math.min(
+                next,
+                DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+              );
+            },
+          );
 
-        setRestRemainingSeconds(
-          (current) =>
-            Math.max(
-              0,
-              current - 1,
-            ),
-        );
-      },
-      1000,
-    );
+          setRestRemainingSeconds(
+            (current) =>
+              Math.max(
+                0,
+                current - 1,
+              ),
+          );
+        },
+        1000,
+      );
 
     return () =>
-      window.clearInterval(timer);
+      window.clearInterval(
+        timer,
+      );
   }, [status]);
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * ARIA VOICE WINDOW
-   * ----------------------------------------------------------
-   *
-   * The timer is controlled by the app.
-   * GPT will never control the clock.
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   useEffect(() => {
@@ -385,14 +523,13 @@ export function WorkoutPage() {
       ariaWarningThresholdReached &&
       !ariaWarningSent
     ) {
-      setAriaWarningSent(true);
+      setAriaWarningSent(
+        true,
+      );
 
       /*
-       * Placeholder for GPT Realtime integration.
-       *
-       * Later this event will trigger:
-       *
-       * "You have five minutes left with ARIA."
+       * GPT Realtime will later receive
+       * this event and speak the 5-minute warning.
        */
 
       console.info(
@@ -402,24 +539,36 @@ export function WorkoutPage() {
 
     if (
       ariaElapsedSeconds >=
-      DEFAULT_ARIA_VOICE_DURATION_SECONDS
+        DEFAULT_ARIA_VOICE_DURATION_SECONDS &&
+      session?.mode !== "visual" &&
+      sessionId
     ) {
-      /*
-       * Voice mode ends automatically.
-       * The workout itself continues visually.
-       *
-       * We don't change the workout status here.
-       * Only the session mode changes.
-       */
-
       setSession(
         (current) =>
           current
             ? {
                 ...current,
                 mode: "visual",
+                ariaElapsedSeconds:
+                  DEFAULT_ARIA_VOICE_DURATION_SECONDS,
               }
             : current,
+      );
+
+      void updateWorkoutSession(
+        sessionId,
+        {
+          mode: "visual",
+          ariaElapsedSeconds:
+            DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+        },
+      ).catch(
+        (voiceError) => {
+          console.error(
+            "Failed to save ARIA visual-mode transition:",
+            voiceError,
+          );
+        },
       );
     }
   }, [
@@ -427,12 +576,14 @@ export function WorkoutPage() {
     ariaElapsedSeconds,
     ariaWarningThresholdReached,
     ariaWarningSent,
+    session,
+    sessionId,
   ]);
 
   /*
-   * ----------------------------------------------------------
-   * WORKOUT COMPLETE
-   * ----------------------------------------------------------
+   * ==========================================================
+   * COMPLETE SESSION
+   * ==========================================================
    */
 
   useEffect(() => {
@@ -445,18 +596,25 @@ export function WorkoutPage() {
 
     void completeWorkoutSession(
       sessionId,
-    ).catch((completeError) => {
-      console.error(
-        "Failed to complete workout session:",
+    ).catch(
+      (
         completeError,
-      );
-    });
-  }, [status, sessionId]);
+      ) => {
+        console.error(
+          "Failed to complete workout session:",
+          completeError,
+        );
+      },
+    );
+  }, [
+    status,
+    sessionId,
+  ]);
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * START SESSION
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   async function startSession() {
@@ -465,9 +623,11 @@ export function WorkoutPage() {
 
     if (!uid) {
       setStatus("error");
+
       setError(
         "You must be signed in to start a workout.",
       );
+
       return;
     }
 
@@ -477,13 +637,16 @@ export function WorkoutPage() {
       !currentExercise
     ) {
       setStatus("error");
+
       setError(
         "Your workout is not ready yet.",
       );
+
       return;
     }
 
     setStatus("starting");
+
     setMessage(
       "Starting your workout session…",
     );
@@ -525,7 +688,8 @@ export function WorkoutPage() {
 
         currentSetNumber: 1,
 
-        startedAt: new Date(),
+        startedAt:
+          new Date(),
       };
 
       const createdSessionId =
@@ -543,18 +707,82 @@ export function WorkoutPage() {
       });
 
       setElapsedSeconds(0);
-      setAriaElapsedSeconds(0);
-      setCurrentExerciseIndex(0);
-      setCurrentSetNumber(1);
-      setRestRemainingSeconds(0);
-      setAriaWarningSent(false);
+
+      setAriaElapsedSeconds(
+        0,
+      );
+
+      setCurrentExerciseIndex(
+        0,
+      );
+
+      setCurrentSetNumber(
+        1,
+      );
+
+      setRestRemainingSeconds(
+        0,
+      );
+
+      setAriaWarningSent(
+        false,
+      );
+
+      setManualControlsOpen(
+        false,
+      );
 
       setStatus("active");
 
       setMessage(
         "Your workout is active.",
       );
-    } catch (startError) {
+
+      /*
+       * Build the exact context that will later
+       * be sent to the secure Realtime endpoint.
+       *
+       * We intentionally do not call OpenAI yet.
+       */
+
+      const realtimeContext =
+  buildRealtimeContext();
+
+if (!realtimeContext) {
+  throw new Error(
+    "Unable to build ARIA realtime context.",
+  );
+}
+
+try {
+  const realtimeSession =
+    await createRealtimeSession(
+      firebaseUser,
+      realtimeContext,
+    );
+
+  console.info(
+    "ARIA Realtime secure session created.",
+    {
+      expiresAt:
+        realtimeSession.expiresAt,
+    },
+  );
+} catch (realtimeError) {
+  console.error(
+    "ARIA Realtime session creation failed:",
+    realtimeError,
+  );
+
+  setMessage(
+    realtimeError instanceof Error
+      ? realtimeError.message
+      : "ARIA voice session could not be prepared.",
+  );
+}
+    } catch (
+      startError
+    ) {
       console.error(
         "Failed to start workout session:",
         startError,
@@ -571,9 +799,9 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
-   * PAUSE
-   * ----------------------------------------------------------
+   * ==========================================================
+   * PAUSE / RESUME
+   * ==========================================================
    */
 
   async function togglePause() {
@@ -619,9 +847,9 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
-   * COMPLETE CURRENT SET
-   * ----------------------------------------------------------
+   * ==========================================================
+   * COMPLETE SET
+   * ==========================================================
    */
 
   async function completeCurrentSet() {
@@ -637,15 +865,6 @@ export function WorkoutPage() {
       currentConfig.sets;
 
     if (isLastSet) {
-      await updateWorkoutSession(
-        sessionId,
-        {
-          currentSetNumber: 1,
-        },
-      );
-
-      setCurrentSetNumber(1);
-
       setRestRemainingSeconds(
         currentConfig.restSeconds,
       );
@@ -653,34 +872,46 @@ export function WorkoutPage() {
       if (
         currentExerciseIndex <
         (sessionDay?.exercises
-          .length ?? 1) -
+          .length ??
+          1) -
           1
       ) {
+        const nextExerciseIndex =
+          currentExerciseIndex +
+          1;
+
         setCurrentExerciseIndex(
-          (current) =>
-            current + 1,
+          nextExerciseIndex,
+        );
+
+        setCurrentSetNumber(
+          1,
         );
 
         await updateWorkoutSession(
           sessionId,
           {
             currentExerciseIndex:
-              currentExerciseIndex +
+              nextExerciseIndex,
+
+            currentSetNumber:
               1,
-            currentSetNumber: 1,
           },
         );
-      } else {
-        setMessage(
-          "Workout exercises completed. Continue until the session ends or finish the workout.",
-        );
+
+        return;
       }
+
+      setMessage(
+        "All exercises are complete. Continue until the workout ends or finish the session.",
+      );
 
       return;
     }
 
     const nextSet =
-      currentSetNumber + 1;
+      currentSetNumber +
+      1;
 
     setCurrentSetNumber(
       nextSet,
@@ -700,9 +931,9 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * FINISH WORKOUT
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   async function finishWorkout() {
@@ -721,7 +952,9 @@ export function WorkoutPage() {
       setMessage(
         "Workout complete. Great work.",
       );
-    } catch (finishError) {
+    } catch (
+      finishError
+    ) {
       console.error(
         "Failed to finish workout:",
         finishError,
@@ -736,23 +969,14 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
-   * CURRENT MODE
-   * ----------------------------------------------------------
+   * ==========================================================
+   * ERROR SCREEN
+   * ==========================================================
    */
 
-  const visualOnly =
-    session?.mode === "visual" ||
-    ariaElapsedSeconds >=
-      DEFAULT_ARIA_VOICE_DURATION_SECONDS;
-
-  /*
-   * ----------------------------------------------------------
-   * ERROR
-   * ----------------------------------------------------------
-   */
-
-  if (status === "error") {
+  if (
+    status === "error"
+  ) {
     return (
       <div className="workout-page">
         <div className="page-title compact">
@@ -760,7 +984,9 @@ export function WorkoutPage() {
             to="/my-program"
             className="back-link"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft
+              size={16}
+            />
             My Program
           </Link>
 
@@ -769,7 +995,8 @@ export function WorkoutPage() {
           </span>
 
           <h1>
-            We couldn't start your session.
+            We couldn't start
+            your session.
           </h1>
 
           <p className="muted">
@@ -779,7 +1006,9 @@ export function WorkoutPage() {
 
         <section className="coach-console">
           <div className="aria-orb giant">
-            <ShieldAlert size={58} />
+            <ShieldAlert
+              size={58}
+            />
           </div>
 
           <Link
@@ -794,12 +1023,14 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
-   * COMPLETE
-   * ----------------------------------------------------------
+   * ==========================================================
+   * COMPLETE SCREEN
+   * ==========================================================
    */
 
-  if (status === "complete") {
+  if (
+    status === "complete"
+  ) {
     return (
       <div className="workout-page">
         <div className="page-title compact">
@@ -807,7 +1038,9 @@ export function WorkoutPage() {
             to="/my-program"
             className="back-link"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft
+              size={16}
+            />
             My Program
           </Link>
 
@@ -827,7 +1060,9 @@ export function WorkoutPage() {
 
         <section className="coach-console">
           <div className="aria-orb giant">
-            <Check size={58} />
+            <Check
+              size={58}
+            />
           </div>
 
           <div className="connection-state active">
@@ -865,9 +1100,9 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * READY SCREEN
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   if (
@@ -882,7 +1117,9 @@ export function WorkoutPage() {
             to="/my-program"
             className="back-link"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft
+              size={16}
+            />
             My Program
           </Link>
 
@@ -897,7 +1134,8 @@ export function WorkoutPage() {
           <p className="muted">
             {status === "loading"
               ? "Preparing your workout…"
-              : status === "starting"
+              : status ===
+                  "starting"
                 ? "Starting your workout…"
                 : "Your session is ready."}
           </p>
@@ -905,7 +1143,9 @@ export function WorkoutPage() {
 
         <section className="coach-console">
           <div className="aria-orb giant">
-            <Headphones size={58} />
+            <Headphones
+              size={58}
+            />
           </div>
 
           <span className="eyebrow">
@@ -919,7 +1159,10 @@ export function WorkoutPage() {
 
           <p>
             {sessionDay
-              ? `${sessionDay.day.name} · ${sessionDay.day.focus || "Training session"}`
+              ? `${sessionDay.day.name} · ${
+                  sessionDay.day.focus ||
+                  "Training session"
+                }`
               : message}
           </p>
 
@@ -961,15 +1204,18 @@ export function WorkoutPage() {
             }
             disabled={
               status ===
-              "loading" ||
+                "loading" ||
               status ===
-              "starting" ||
+                "starting" ||
               !sessionDay
             }
           >
-            <Play size={18} />
+            <Play
+              size={18}
+            />
 
-            {status === "starting"
+            {status ===
+            "starting"
               ? "Preparing…"
               : "Start with ARIA"}
           </button>
@@ -980,11 +1226,9 @@ export function WorkoutPage() {
             </div>
 
             <p>
-              The workout engine is ready.
-              Voice integration with{" "}
-              {ARIA_MODEL} will be connected
-              after the session engine is
-              fully validated.
+              Your voice coach will
+              guide the session while
+              you train hands-free.
             </p>
 
             <p
@@ -993,21 +1237,25 @@ export function WorkoutPage() {
                 fontSize: "10px",
               }}
             >
-              {ARIA_INSTRUCTIONS
-                .replace(/\s+/g, " ")
-                .slice(0, 350)}
-              …
+              Model: {ARIA_MODEL}
+              <br />
+              Your personalized coaching
+              instructions will be applied
+              when ARIA voice coaching
+              starts.
             </p>
           </div>
 
           <div className="safety-note">
-            <ShieldAlert size={18} />
+            <ShieldAlert
+              size={18}
+            />
 
             <span>
-              ARIA is a fitness coach, not
-              a medical professional. Stop
-              for significant pain or serious
-              symptoms.
+              ARIA is a fitness coach,
+              not a medical professional.
+              Stop for significant pain
+              or serious symptoms.
             </span>
           </div>
         </section>
@@ -1016,9 +1264,9 @@ export function WorkoutPage() {
   }
 
   /*
-   * ----------------------------------------------------------
+   * ==========================================================
    * ACTIVE / PAUSED
-   * ----------------------------------------------------------
+   * ==========================================================
    */
 
   return (
@@ -1028,12 +1276,14 @@ export function WorkoutPage() {
           to="/my-program"
           className="back-link"
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft
+            size={16}
+          />
           My Program
         </Link>
 
         <span className="eyebrow">
-          {visualOnly
+          {visualMode
             ? "Visual mode"
             : "ARIA voice coach"}
         </span>
@@ -1053,10 +1303,14 @@ export function WorkoutPage() {
 
       <section className="coach-console">
         <div className="aria-orb giant">
-          {visualOnly ? (
-            <Dumbbell size={58} />
+          {visualMode ? (
+            <Dumbbell
+              size={58}
+            />
           ) : (
-            <Headphones size={58} />
+            <Headphones
+              size={58}
+            />
           )}
         </div>
 
@@ -1067,11 +1321,13 @@ export function WorkoutPage() {
               "repeat(2, minmax(0, 1fr))",
             gap: "10px",
             width: "100%",
-            maxWidth: "520px",
+            maxWidth: "560px",
           }}
         >
           <div className="stat-card">
-            <Clock3 size={18} />
+            <Clock3
+              size={18}
+            />
 
             <span>
               Workout remaining
@@ -1085,14 +1341,16 @@ export function WorkoutPage() {
           </div>
 
           <div className="stat-card">
-            <Headphones size={18} />
+            <Headphones
+              size={18}
+            />
 
             <span>
               ARIA remaining
             </span>
 
             <strong>
-              {visualOnly
+              {visualMode
                 ? "VOICE ENDED"
                 : formatTime(
                     ariaRemainingSeconds,
@@ -1101,10 +1359,16 @@ export function WorkoutPage() {
           </div>
         </div>
 
-        <div className="connection-state active">
+        <div
+          className={`connection-state ${
+            visualMode
+              ? "ready"
+              : "active"
+          }`}
+        >
           <span className="state-dot" />
 
-          {visualOnly
+          {visualMode
             ? "VISUAL MODE"
             : status === "paused"
               ? "PAUSED"
@@ -1112,18 +1376,19 @@ export function WorkoutPage() {
         </div>
 
         {ariaWarningSent &&
-          !visualOnly && (
+          !visualMode && (
             <div className="notice">
-              You have 5 minutes left
-              with ARIA.
+              ARIA has 5 minutes
+              remaining.
             </div>
           )}
 
-        {visualOnly && (
+        {visualMode && (
           <div className="notice">
-            Your ARIA voice session has
-            ended. Continue your workout
-            visually at your own pace.
+            Your ARIA voice session
+            has ended. Continue your
+            workout visually at your
+            own pace.
           </div>
         )}
 
@@ -1140,34 +1405,47 @@ export function WorkoutPage() {
               {currentExerciseIndex +
                 1}{" "}
               of{" "}
-              {sessionDay?.exercises
-                .length ?? 0}
+              {
+                sessionDay
+                  ?.exercises
+                  .length
+              }
             </span>
 
             <h2>
-              {currentExercise.exercise
-                ?.name ??
-                "Exercise"}
+              {
+                currentExercise
+                  .exercise
+                  ?.name ??
+                "Exercise"
+              }
             </h2>
 
             <div
               className="exercise-meta"
               style={{
-                marginTop: "10px",
+                marginTop:
+                  "10px",
               }}
             >
               <span>
                 Set{" "}
                 {currentSetNumber}{" "}
                 of{" "}
-                {currentConfig?.sets ??
-                  0}
+                {
+                  currentConfig
+                    ?.sets ??
+                  0
+                }
               </span>
 
               {currentConfig?.reps !==
                 undefined && (
                 <span>
-                  {currentConfig.reps} reps
+                  {
+                    currentConfig.reps
+                  }{" "}
+                  reps
                 </span>
               )}
 
@@ -1175,7 +1453,8 @@ export function WorkoutPage() {
                 undefined && (
                 <span>
                   {
-                    currentConfig.durationSeconds
+                    currentConfig
+                      .durationSeconds
                   }{" "}
                   sec
                 </span>
@@ -1184,7 +1463,8 @@ export function WorkoutPage() {
               <span>
                 Rest{" "}
                 {
-                  currentConfig?.restSeconds ??
+                  currentConfig
+                    ?.restSeconds ??
                   0
                 }{" "}
                 sec
@@ -1195,14 +1475,18 @@ export function WorkoutPage() {
               0 && (
               <div
                 style={{
-                  marginTop: "18px",
-                  padding: "20px",
-                  borderRadius: "18px",
+                  marginTop:
+                    "18px",
+                  padding:
+                    "20px",
+                  borderRadius:
+                    "18px",
                   background:
                     "#7cf7d408",
                   border:
                     "1px solid #7cf7d41a",
-                  textAlign: "center",
+                  textAlign:
+                    "center",
                 }}
               >
                 <span className="eyebrow">
@@ -1213,7 +1497,8 @@ export function WorkoutPage() {
                   style={{
                     display:
                       "block",
-                    fontSize: "34px",
+                    fontSize:
+                      "34px",
                     marginTop:
                       "5px",
                   }}
@@ -1225,73 +1510,197 @@ export function WorkoutPage() {
               </div>
             )}
 
-            <button
-              type="button"
-              className="primary-button"
-              style={{
-                width: "100%",
-                marginTop:
-                  "20px",
-              }}
-              onClick={() =>
-                void completeCurrentSet()
-              }
-              disabled={
-                status !== "active" ||
-                restRemainingSeconds >
-                  0
-              }
-            >
-              <Check size={18} />
+            {voiceMode && (
+              <div
+                style={{
+                  marginTop:
+                    "20px",
+                  padding:
+                    "16px",
+                  borderRadius:
+                    "16px",
+                  background:
+                    "#7cf7d406",
+                  border:
+                    "1px solid #7cf7d414",
+                  textAlign:
+                    "center",
+                }}
+              >
+                <Headphones
+                  size={20}
+                />
 
-              Complete Set
-            </button>
+                <strong
+                  style={{
+                    display:
+                      "block",
+                    marginTop:
+                      "7px",
+                    fontSize:
+                      "13px",
+                  }}
+                >
+                  ARIA is coaching
+                  you
+                </strong>
+
+                <span
+                  style={{
+                    display:
+                      "block",
+                    marginTop:
+                      "5px",
+                    color:
+                      "#8e9aaa",
+                    fontSize:
+                      "11px",
+                  }}
+                >
+                  Keep training. Your
+                  voice coach will handle
+                  the session flow.
+                </span>
+              </div>
+            )}
+
+            {visualMode && (
+              <button
+                type="button"
+                className="primary-button"
+                style={{
+                  width:
+                    "100%",
+                  marginTop:
+                    "20px",
+                }}
+                onClick={() =>
+                  void completeCurrentSet()
+                }
+                disabled={
+                  status !==
+                    "active" ||
+                  restRemainingSeconds >
+                    0
+                }
+              >
+                <Check
+                  size={18}
+                />
+
+                Complete Set
+              </button>
+            )}
           </section>
         )}
 
         <div
           style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            justifyContent:
-              "center",
+            width: "100%",
+            maxWidth: "560px",
           }}
         >
           <button
             type="button"
             className="secondary-button"
+            style={{
+              width: "100%",
+              justifyContent:
+                "center",
+            }}
             onClick={() =>
-              void togglePause()
+              setManualControlsOpen(
+                (current) =>
+                  !current,
+              )
             }
           >
-            {status === "paused" ? (
-              <>
-                <Play size={16} />
-                Resume
-              </>
-            ) : (
-              <>
-                <Pause size={16} />
-                Pause
-              </>
-            )}
+            {manualControlsOpen
+              ? "Hide manual controls"
+              : "Manual controls"}
           </button>
 
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() =>
-              void finishWorkout()
-            }
-          >
-            Finish Workout
-            <ChevronRight size={16} />
-          </button>
+          {manualControlsOpen && (
+            <div
+              style={{
+                display:
+                  "flex",
+                justifyContent:
+                  "center",
+                gap: "10px",
+                flexWrap:
+                  "wrap",
+                marginTop:
+                  "10px",
+              }}
+            >
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() =>
+                  void togglePause()
+                }
+              >
+                {status ===
+                "paused" ? (
+                  <>
+                    <Play
+                      size={16}
+                    />
+                    Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause
+                      size={16}
+                    />
+                    Pause
+                  </>
+                )}
+              </button>
+
+              {voiceMode && (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() =>
+                    void completeCurrentSet()
+                  }
+                  disabled={
+                    status !==
+                      "active" ||
+                    restRemainingSeconds >
+                      0
+                  }
+                >
+                  <Check
+                    size={16}
+                  />
+                  Mark Set
+                  Complete
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() =>
+                  void finishWorkout()
+                }
+              >
+                Finish Workout
+                <ChevronRight
+                  size={16}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="safety-note">
-          <ShieldAlert size={18} />
+          <ShieldAlert
+            size={18}
+          />
 
           <span>
             Stop the workout if you
