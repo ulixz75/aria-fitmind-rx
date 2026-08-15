@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
   writeBatch,
+  Timestamp,
 } from "firebase/firestore";
 
 import {
@@ -32,7 +33,12 @@ import type { Exercise } from "../types/exercises";
 import type {
   ProgramDay,
   TrainingProgram,
+  ProgramExercise,
 } from "../types/programs";
+
+import type {
+  ProgramAssignment,
+} from "../types/programAssignments";
 
 /* ============================================================
    USERS / CLIENT PROFILES
@@ -505,4 +511,228 @@ export async function deleteTrainingProgram(
   );
 
   await batch.commit();
+}
+
+/* ============================================================
+   PROGRAM ASSIGNMENTS
+   ============================================================ */
+
+export async function listClientProgramAssignments(
+  clientId: string,
+): Promise<ProgramAssignment[]> {
+  const snapshot = await getDocs(
+    query(
+      collection(
+        db,
+        "programAssignments",
+      ),
+      where(
+        "clientId",
+        "==",
+        clientId,
+      ),
+    ),
+  );
+
+  return snapshot.docs
+    .map(
+      (document) => ({
+        id: document.id,
+        ...(document.data() as Omit<
+          ProgramAssignment,
+          "id"
+        >),
+      }),
+    )
+    .sort((a, b) => {
+      const aTime =
+        a.createdAt &&
+        typeof a.createdAt === "object" &&
+        "toMillis" in a.createdAt
+          ? (
+              a.createdAt as {
+                toMillis: () => number;
+              }
+            ).toMillis()
+          : 0;
+
+      const bTime =
+        b.createdAt &&
+        typeof b.createdAt === "object" &&
+        "toMillis" in b.createdAt
+          ? (
+              b.createdAt as {
+                toMillis: () => number;
+              }
+            ).toMillis()
+          : 0;
+
+      return bTime - aTime;
+    });
+}
+
+export async function getActiveProgramAssignment(
+  clientId: string,
+): Promise<ProgramAssignment | null> {
+  const assignments =
+    await listClientProgramAssignments(
+      clientId,
+    );
+
+  return (
+    assignments.find(
+      (assignment) =>
+        assignment.status ===
+        "active",
+    ) ?? null
+  );
+}
+
+export async function assignProgramToClient(
+  clientId: string,
+  programId: string,
+  assignedBy: string,
+  startDate: Date,
+): Promise<string> {
+  const existingAssignments =
+    await listClientProgramAssignments(
+      clientId,
+    );
+
+  const batch =
+    writeBatch(db);
+
+  /*
+   * Only one program should be active
+   * for a client at a time.
+   */
+
+  for (
+    const assignment of
+      existingAssignments
+  ) {
+    if (
+      assignment.status ===
+      "active"
+    ) {
+      batch.update(
+        doc(
+          db,
+          "programAssignments",
+          assignment.id,
+        ),
+        {
+          status: "replaced",
+          updatedAt:
+            serverTimestamp(),
+        },
+      );
+    }
+  }
+
+  const assignmentRef =
+    doc(
+      collection(
+        db,
+        "programAssignments",
+      ),
+    );
+
+  batch.set(
+    assignmentRef,
+    {
+      clientId,
+      programId,
+      assignedBy,
+      startDate:
+        Timestamp.fromDate(
+          startDate,
+        ),
+      status: "active",
+      createdAt:
+        serverTimestamp(),
+      updatedAt:
+        serverTimestamp(),
+    },
+  );
+
+  await batch.commit();
+
+  return assignmentRef.id;
+}
+/* ============================================================
+   CLIENT PROGRAM
+   ============================================================ */
+
+export async function getActiveProgramForClient(
+  clientId: string,
+): Promise<{
+  assignment: ProgramAssignment;
+  program: TrainingProgram | null;
+} | null> {
+  const assignment =
+    await getActiveProgramAssignment(
+      clientId,
+    );
+
+  if (!assignment) {
+    return null;
+  }
+
+  const program = await getTrainingProgram(
+    assignment.programId,
+  );
+
+  return {
+    assignment,
+    program,
+  };
+}
+
+export async function getTrainingProgram(
+  programId: string,
+): Promise<TrainingProgram | null> {
+  const snapshot = await getDoc(
+    doc(
+      db,
+      "trainingPrograms",
+      programId,
+    ),
+  );
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+    ...(snapshot.data() as Omit<
+      TrainingProgram,
+      "id"
+    >),
+  };
+}
+
+export async function getProgramDayExercises(
+  day: ProgramDay,
+): Promise<
+  Array<{
+    programExercise: ProgramExercise;
+    exercise: Exercise | null;
+  }>
+> {
+  const results =
+    await Promise.all(
+      day.exercises.map(
+        async (programExercise) => ({
+          programExercise,
+          exercise:
+            await getExercise(
+              programExercise.exerciseId,
+            ),
+        }),
+      ),
+    );
+
+  return results;
 }

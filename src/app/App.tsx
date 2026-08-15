@@ -21,6 +21,8 @@ import { AdminDashboard } from "../features/admin/AdminDashboard";
 import { AdminUsersPage } from "../features/admin/AdminUsersPage";
 import { ExerciseLibraryPage } from "../features/admin/ExerciseLibraryPage";
 import { ProgramsPage } from "../features/admin/ProgramsPage";
+import { AdminClientsPage } from "../features/admin/AdminClientsPage";
+import { MyProgramPage } from "../features/client/MyProgramPage";
 
 /* ============================================================
    APP SHELL
@@ -108,6 +110,17 @@ function Shell({
   Programs
 </Link>
 
+<Link
+  to="/admin/clients"
+  className={
+    location.pathname.startsWith("/admin/clients")
+      ? "active"
+      : ""
+  }
+>
+  Clients
+</Link>
+
             </>
           ) : (
             <>
@@ -132,6 +145,17 @@ function Shell({
               >
                 Coach
               </Link>
+
+              <Link
+  to="/my-program"
+  className={
+    location.pathname.startsWith("/my-program")
+      ? "active"
+      : ""
+  }
+>
+  My Program
+</Link>
 
               <Link
                 to="/profile"
@@ -550,6 +574,23 @@ function AuthenticatedRoutes() {
     <AdminGuard>
       <ProgramsPage />
     </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/clients"
+  element={
+    <AdminGuard>
+      <AdminClientsPage />
+    </AdminGuard>
+  }
+/>
+<Route
+  path="/my-program"
+  element={
+    <ClientGuard>
+      <MyProgramPage />
+    </ClientGuard>
   }
 />
 

@@ -52,6 +52,12 @@ match /programDays/{dayId} {
   allow create, update, delete: if isAdmin();
 }
 
+match /programAssignments/{assignmentId} {
+  allow read: if isAdmin() || (signedIn() && resource.data.clientId == request.auth.uid);
+  allow create: if isActive() && request.resource.data.clientId == request.auth.uid;
+  allow update, delete: if isAdmin() || (isActive() && resource.data.clientId == request.auth.uid);
+}
+
     match /{document=**} { allow read, write: if false; }
   }
 }
