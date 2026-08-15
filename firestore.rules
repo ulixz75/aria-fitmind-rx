@@ -38,6 +38,19 @@ service cloud.firestore {
       allow read: if isActive() || isAdmin();
       allow write: if isAdmin();
     }
+    match /exercises/{exerciseId} {
+  allow read: if isAdmin() || isActive();
+  allow create, update, delete: if isAdmin();
+}
+match /trainingPrograms/{programId} {
+  allow read: if isAdmin();
+  allow create, update, delete: if isAdmin();
+}
+
+match /programDays/{dayId} {
+  allow read: if isAdmin();
+  allow create, update, delete: if isAdmin();
+}
 
     match /{document=**} { allow read, write: if false; }
   }

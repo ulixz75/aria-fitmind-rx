@@ -1,0 +1,1613 @@
+{
+  "schema_version": 3,
+  "generated_at": "2026-08-14T12:00:24Z",
+  "source": "repdb-preview",
+  "locale": "de",
+  "enum_labels": {
+    "category": {
+      "cardio": "Cardio",
+      "olympic": "Olympisch",
+      "plyometrics": "Plyometrie",
+      "strength": "Kraft",
+      "stretching": "Dehnen",
+      "strongman": "Strongman"
+    },
+    "force_type": {
+      "dynamic": "Dynamisch",
+      "pull": "Ziehen",
+      "push": "Drücken",
+      "static": "Statisch"
+    },
+    "mechanic": {
+      "compound": "Mehrgelenkig",
+      "isolation": "Isolation"
+    },
+    "difficulty": {
+      "advanced": "Fortgeschritten",
+      "beginner": "Anfänger",
+      "intermediate": "Mittel"
+    },
+    "body_part": {
+      "back": "Rücken",
+      "chest": "Brust",
+      "core": "Rumpf",
+      "full_body": "Ganzkörper",
+      "lower_arms": "Unterarme",
+      "lower_legs": "Unterschenkel",
+      "shoulders": "Schultern",
+      "upper_arms": "Oberarme",
+      "upper_legs": "Oberschenkel"
+    },
+    "goals": {
+      "core": "Rumpf",
+      "endurance": "Ausdauer",
+      "hypertrophy": "Hypertrophie",
+      "mobility": "Mobilität",
+      "power": "Schnellkraft",
+      "rehabilitation": "Rehabilitation",
+      "strength": "Kraft"
+    }
+  },
+  "muscles": {
+    "adductors": {
+      "name": "Adduktoren",
+      "name_scientific": "Hip Adductors",
+      "region": "upper_legs",
+      "synonyms": [
+        "hip adductors",
+        "inner thigh",
+        "adductor muscles",
+        "groin"
+      ],
+      "image": "adductors.webp"
+    },
+    "anterior_deltoid": {
+      "name": "Vordere Schulter",
+      "name_scientific": "Anterior Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "front deltoid",
+        "anterior delt",
+        "front delt",
+        "anterior deltoid"
+      ],
+      "image": "anterior-deltoid.webp"
+    },
+    "biceps_brachii": {
+      "name": "Bizeps",
+      "name_scientific": "Biceps Brachii",
+      "region": "upper_arms",
+      "synonyms": [
+        "bicep",
+        "biceps brachii",
+        "biceps muscle",
+        "guns"
+      ],
+      "image": "biceps-brachii.webp"
+    },
+    "brachialis": {
+      "name": "Brachialis",
+      "name_scientific": "Brachialis",
+      "region": "upper_arms",
+      "synonyms": [
+        "brachialis muscle",
+        "lower bicep"
+      ],
+      "image": "brachialis.webp"
+    },
+    "brachioradialis": {
+      "name": "Brachioradialis",
+      "name_scientific": "Brachioradialis",
+      "region": "lower_arms",
+      "synonyms": [
+        "brachioradialis muscle",
+        "forearm flexor"
+      ],
+      "image": "brachioradialis.webp"
+    },
+    "erector_spinae": {
+      "name": "Rückenstrecker",
+      "name_scientific": "Erector Spinae",
+      "region": "back",
+      "synonyms": [
+        "erector spinae",
+        "spinal erectors",
+        "lower back muscles",
+        "back extensors"
+      ],
+      "image": "erector-spinae.webp"
+    },
+    "forearm_flexors": {
+      "name": "Unterarm-Flexoren",
+      "name_scientific": "Wrist Flexor Muscles",
+      "region": "lower_arms",
+      "synonyms": [
+        "wrist flexors",
+        "flexor carpi",
+        "forearm flexors",
+        "inner forearm"
+      ],
+      "image": "forearm-flexors.webp"
+    },
+    "gluteus_maximus": {
+      "name": "Gesäßmuskeln",
+      "name_scientific": "Gluteus Maximus",
+      "region": "upper_legs",
+      "synonyms": [
+        "glute",
+        "glutes",
+        "gluteus maximus",
+        "buttocks",
+        "butt"
+      ],
+      "image": "gluteus-maximus.webp"
+    },
+    "gluteus_medius": {
+      "name": "Mittlerer Gesäßmuskel",
+      "name_scientific": "Gluteus Medius",
+      "region": "upper_legs",
+      "synonyms": [
+        "glute med",
+        "gluteus medius",
+        "side glute",
+        "hip abductor glute"
+      ],
+      "image": "gluteus-medius.webp"
+    },
+    "hamstrings": {
+      "name": "Oberschenkel-Rückseite",
+      "name_scientific": "Hamstring Muscles",
+      "region": "upper_legs",
+      "synonyms": [
+        "hamstring",
+        "hamstrings",
+        "posterior thigh",
+        "biceps femoris"
+      ],
+      "image": "hamstrings.webp"
+    },
+    "hip_flexors": {
+      "name": "Hüftbeuger",
+      "name_scientific": "Hip Flexor Muscles",
+      "region": "core",
+      "synonyms": [
+        "hip flexor",
+        "iliopsoas",
+        "psoas",
+        "iliacus",
+        "hip flexors"
+      ],
+      "image": "hip-flexors.webp"
+    },
+    "lateral_deltoid": {
+      "name": "Seitliche Schulter",
+      "name_scientific": "Lateral Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "side deltoid",
+        "lateral delt",
+        "side delt",
+        "medial deltoid",
+        "lateral deltoid"
+      ],
+      "image": "lateral-deltoid.webp"
+    },
+    "latissimus_dorsi": {
+      "name": "Latissimus",
+      "name_scientific": "Latissimus Dorsi",
+      "region": "back",
+      "synonyms": [
+        "lats",
+        "lat",
+        "latissimus dorsi",
+        "latissimus",
+        "back wings"
+      ],
+      "image": "latissimus-dorsi.webp"
+    },
+    "obliques": {
+      "name": "Schräge Bauchmuskulatur",
+      "name_scientific": "Oblique Abdominals",
+      "region": "core",
+      "synonyms": [
+        "oblique",
+        "obliques",
+        "side abs",
+        "external oblique",
+        "internal oblique"
+      ],
+      "image": "obliques.webp"
+    },
+    "posterior_deltoid": {
+      "name": "Hintere Schulter",
+      "name_scientific": "Posterior Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "rear deltoid",
+        "posterior delt",
+        "rear delt",
+        "back delt",
+        "posterior deltoid"
+      ],
+      "image": "posterior-deltoid.webp"
+    },
+    "quadriceps": {
+      "name": "Quadrizeps",
+      "name_scientific": "Quadriceps Femoris",
+      "region": "upper_legs",
+      "synonyms": [
+        "quad",
+        "quads",
+        "quadriceps",
+        "quadriceps femoris",
+        "front thigh"
+      ],
+      "image": "quadriceps.webp"
+    },
+    "rectus_abdominis": {
+      "name": "Bauchmuskel",
+      "name_scientific": "Rectus Abdominis",
+      "region": "core",
+      "synonyms": [
+        "abs",
+        "six-pack",
+        "rectus abdominis",
+        "abdominals",
+        "stomach muscles"
+      ],
+      "image": "rectus-abdominis.webp"
+    },
+    "rhomboids": {
+      "name": "Rhomboiden",
+      "name_scientific": "Rhomboid Muscles",
+      "region": "back",
+      "synonyms": [
+        "rhomboid",
+        "rhomboids",
+        "rhomboid major",
+        "rhomboid minor",
+        "upper back"
+      ],
+      "image": "rhomboids.webp"
+    },
+    "serratus_anterior": {
+      "name": "Sägemuskel",
+      "name_scientific": "Serratus Anterior",
+      "region": "chest",
+      "synonyms": [
+        "serratus",
+        "serratus anterior",
+        "boxer's muscle",
+        "rib muscles"
+      ],
+      "image": "serratus-anterior.webp"
+    },
+    "supraspinatus": {
+      "name": "Supraspinatus",
+      "name_scientific": "Supraspinatus",
+      "region": "shoulders",
+      "synonyms": [
+        "supraspinatus",
+        "rotator cuff",
+        "shoulder stabilizer"
+      ],
+      "image": "lateral-deltoid.webp"
+    },
+    "trapezius": {
+      "name": "Trapezmuskel",
+      "name_scientific": "Trapezius",
+      "region": "back",
+      "synonyms": [
+        "trap",
+        "traps",
+        "trapezius",
+        "upper traps",
+        "lower traps",
+        "mid traps"
+      ],
+      "image": "trapezius.webp"
+    },
+    "triceps_brachii": {
+      "name": "Trizeps",
+      "name_scientific": "Triceps Brachii",
+      "region": "upper_arms",
+      "synonyms": [
+        "tricep",
+        "triceps",
+        "triceps brachii",
+        "horseshoe",
+        "tris"
+      ],
+      "image": "triceps-brachii.webp"
+    }
+  },
+  "equipment": {
+    "barbell": {
+      "name": "Langhantel",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "bar",
+        "olympic barbell",
+        "straight bar",
+        "olympic bar",
+        "power bar"
+      ],
+      "image": "barbell.webp"
+    },
+    "battle_rope": {
+      "name": "Battle Rope",
+      "tags": [
+        "conditioning_tool",
+        "full_body",
+        "cardio"
+      ],
+      "synonyms": [
+        "battle ropes",
+        "heavy rope",
+        "training rope",
+        "conditioning rope"
+      ],
+      "image": "battle-rope.webp"
+    },
+    "cable": {
+      "name": "Kabelzug",
+      "tags": [
+        "cable"
+      ],
+      "synonyms": [
+        "cable pulley",
+        "functional trainer",
+        "cable crossover",
+        "cable column",
+        "cable station",
+        "pulley machine",
+        "cable tower"
+      ],
+      "image": "cable.webp"
+    },
+    "dumbbell": {
+      "name": "Kurzhantel",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "db",
+        "dumbell",
+        "hex dumbbell",
+        "rubber dumbbell",
+        "hand weight"
+      ],
+      "image": "dumbbell.webp"
+    },
+    "ez_bar": {
+      "name": "SZ-Stange",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "ez bar",
+        "ez curl bar",
+        "curl bar",
+        "w-bar",
+        "cambered bar",
+        "zig-zag bar"
+      ],
+      "image": "ez-bar.webp"
+    },
+    "flat_bench": {
+      "name": "Flachbank",
+      "tags": [
+        "free_weight",
+        "upper_body"
+      ],
+      "synonyms": [
+        "bench",
+        "flat weight bench",
+        "utility bench",
+        "adjustable bench (flat)"
+      ],
+      "image": "flat-bench.webp"
+    },
+    "hack_squat": {
+      "name": "Hack-Squat-Maschine",
+      "tags": [
+        "machine",
+        "squat",
+        "lower_body",
+        "legs"
+      ],
+      "synonyms": [
+        "hack squat",
+        "angled squat",
+        "reverse leg press",
+        "plate-loaded hack squat",
+        "v-squat",
+        "v squat",
+        "v-squat machine"
+      ],
+      "image": "hack-squat.webp"
+    },
+    "incline_bench": {
+      "name": "Schrägbank (positiv)",
+      "tags": [
+        "free_weight",
+        "upper_body"
+      ],
+      "synonyms": [
+        "incline weight bench",
+        "adjustable incline bench",
+        "adjustable bench (incline)"
+      ],
+      "image": "incline-bench.webp"
+    },
+    "kettlebell": {
+      "name": "Kettlebell",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "kb",
+        "cast iron kettlebell",
+        "competition kettlebell",
+        "girya"
+      ],
+      "image": "kettlebell.webp"
+    },
+    "lateral_raise_machine": {
+      "name": "Seitheben-Maschine",
+      "tags": [
+        "machine",
+        "push",
+        "upper_body",
+        "shoulders"
+      ],
+      "synonyms": [
+        "seated lateral raise",
+        "side raise machine",
+        "delt raise machine",
+        "shoulder raise machine"
+      ],
+      "image": "lateral-raise-machine.webp"
+    },
+    "plate_loaded_lateral_raise_machine": {
+      "name": "Seitheben-Maschine (scheibenbeladen)",
+      "tags": [
+        "machine",
+        "push",
+        "upper_body",
+        "shoulders"
+      ],
+      "synonyms": [
+        "iso-lateral raise machine",
+        "plate loaded side raise",
+        "plate loaded delt raise",
+        "iso lateral lateral raise"
+      ],
+      "image": "plate-loaded-lateral-raise-machine.webp"
+    },
+    "pull_up_bar": {
+      "name": "Klimmzugstange",
+      "tags": [
+        "bodyweight_aid",
+        "pull",
+        "upper_body"
+      ],
+      "synonyms": [
+        "chin-up bar",
+        "chin up bar",
+        "power tower",
+        "pull up bar",
+        "doorway bar"
+      ],
+      "image": "pull-up-bar.webp"
+    },
+    "resistance_band": {
+      "name": "Fitnessband",
+      "tags": [
+        "band",
+        "full_body"
+      ],
+      "synonyms": [
+        "power band",
+        "pull-up band",
+        "assistance band",
+        "tube band",
+        "tubing band",
+        "long resistance band"
+      ],
+      "image": "resistance-band.webp"
+    },
+    "rings": {
+      "name": "Ringe",
+      "tags": [
+        "rope_suspension",
+        "bodyweight_aid",
+        "upper_body"
+      ],
+      "synonyms": [
+        "gymnastic rings",
+        "still rings",
+        "wood rings",
+        "olympic rings"
+      ],
+      "image": "rings.webp"
+    },
+    "smith_machine": {
+      "name": "Multipresse",
+      "tags": [
+        "machine"
+      ],
+      "synonyms": [
+        "smith bar",
+        "guided barbell",
+        "fixed barbell",
+        "smith press"
+      ],
+      "image": "smith-machine.webp"
+    },
+    "stability_ball": {
+      "name": "Gymnastikball",
+      "tags": [
+        "ball",
+        "conditioning_tool",
+        "core"
+      ],
+      "synonyms": [
+        "swiss ball",
+        "exercise ball",
+        "yoga ball",
+        "physio ball",
+        "gym ball",
+        "balance ball"
+      ],
+      "image": "stability-ball.webp"
+    }
+  },
+  "exercises": [
+    {
+      "id": "battle-ropes",
+      "name": "Battle Ropes",
+      "description": "Eine hochintensive Konditionsübung mit dicken Seilen, trainiert oberen Rücken, Schultern und Griff.",
+      "instructions": [
+        "Befestige die Seile an einem festen Punkt und fasse je ein Ende.",
+        "Trete zurück, sodass die Seile moderaten Durchhang haben.",
+        "Gehe in eine Viertelhocke, Füße schulterbreit.",
+        "Bewege beide Arme schnell auf und ab, um Wellen durch die Seile zu senden.",
+        "Setze das vorgegebene Arbeitsintervall fort."
+      ],
+      "tips": [
+        "Bleibe das ganze Intervall in der Viertelhocke.",
+        "Erzeuge Kraft aus Beinen und Hüfte, nicht nur aus den Armen.",
+        "Halte die Wellen gleichmäßig und straff."
+      ],
+      "category": "cardio",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "battle_rope",
+      "body_part": "full_body",
+      "primary_muscles": [
+        "anterior_deltoid",
+        "lateral_deltoid",
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "forearm_flexors",
+        "quadriceps",
+        "rectus_abdominis",
+        "trapezius"
+      ],
+      "goals": [
+        "endurance",
+        "power"
+      ],
+      "tags": [
+        "full_body",
+        "conditioning"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "battle-rope-double-slam",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "main"
+        ],
+        "flat": [
+          "main"
+        ]
+      },
+      "synonyms": [
+        "battle ropes"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 10.3
+    },
+    {
+      "id": "behind-the-neck-press",
+      "name": "Nackendrücken",
+      "description": "Eine Schulterdrückvariante mit der Langhantel, die hinter dem Kopf vom Nacken aus nach oben gedrückt wird.",
+      "instructions": [
+        "Sitze oder stehe mit einer Langhantel auf dem oberen Trapezmuskel hinter dem Nacken.",
+        "Greife die Stange breiter als schulterbreit.",
+        "Drücke die Stange senkrecht nach oben, bis die Arme gestreckt sind.",
+        "Senke die Stange kontrolliert zurück in die Ausgangsposition.",
+        "Wiederhole die gewünschte Anzahl von Wiederholungen."
+      ],
+      "tips": [
+        "Teste die Bewegung zuerst mit leichter Last, denn sie verlangt viel Schultermobilität.",
+        "Schiebe den Kopf leicht nach vorn, damit die Stange frei laufen kann.",
+        "Brich den Satz ab, sobald es in Schulter oder Nacken zwickt."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "barbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "anterior_deltoid",
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "trapezius",
+        "triceps_brachii"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "knee_safe"
+      ],
+      "variation_group": "overhead-press",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "bench-leg-pull-in",
+      "name": "Bank-Beinzug",
+      "description": "Eine Rumpfübung in Rückenlage auf einer flachen Bank, bei der die Knie zur Brust gezogen werden, um den geraden Bauchmuskel zu trainieren.",
+      "instructions": [
+        "Lege dich auf eine flache Bank und halte die Seiten hinter dem Kopf als Stütze.",
+        "Strecke die Beine gerade aus, Fersen knapp über der Bankoberfläche.",
+        "Ziehe die Knie zur Brust und hebe dabei die Hüften leicht von der Bank.",
+        "Strecke die Beine kontrolliert zurück, ohne die Fersen auf die Bank zu legen.",
+        "Wiederhole für die gewünschte Anzahl Wiederholungen."
+      ],
+      "tips": [
+        "Drücke den unteren Rücken in die Bank, um den Hüftbeuger zu entlasten.",
+        "Lass die Beine nicht unkontrolliert fallen — behalte in der Absenkphase die Spannung.",
+        "Spanne den Bauch am höchsten Punkt jeder Wiederholung aktiv an."
+      ],
+      "category": "strength",
+      "force_type": "dynamic",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "body_part": "core",
+      "primary_muscles": [
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "hip_flexors",
+        "obliques"
+      ],
+      "goals": [
+        "hypertrophy",
+        "endurance"
+      ],
+      "tags": [
+        "core",
+        "calisthenics",
+        "requires_bench"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "flat_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 3.5
+    },
+    {
+      "id": "cossack-squat",
+      "name": "Kosakenkniebeuge",
+      "description": "Eine breite seitliche Kniebeuge, die den Körper tief über ein gebeugtes Bein absenkt, während das andere gestreckt bleibt, und so einbeinige Kraft, Hüftbeweglichkeit und Adduktoren-Flexibilität trainiert.",
+      "instructions": [
+        "Stehe in breitem Stand mit leicht nach außen gedrehten Zehen.",
+        "Verlagere das Gewicht auf eine Seite, beuge dieses Knie und sinke in eine tiefe Kniebeuge.",
+        "Halte das andere Bein gestreckt, die Ferse am Boden und die Zehen nach oben.",
+        "Sinke so tief, wie es deine Beweglichkeit erlaubt, und halte die Brust aufrecht.",
+        "Drücke dich über das gebeugte Bein zurück in die Mitte und wiederhole zur anderen Seite."
+      ],
+      "tips": [
+        "Halte die Ferse des Arbeitsbeins am Boden — rolle nicht auf die Zehen.",
+        "Zeige mit den Zehen des gestreckten Beins nach oben, um Spannung in den Adduktoren zu halten.",
+        "Halte bei Bedarf ein leichtes Gewicht vor der Brust als Gegengewicht."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "adductors",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "is_unilateral": true,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "synonyms": [
+        "cossack lunge",
+        "side squat"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "dumbbell-reverse-fly",
+      "name": "Kurzhantel Reverse Fly",
+      "description": "Eine Isolationsübung in vorgebeugter Haltung, bei der du Kurzhanteln seitlich anhebst und die hinteren Schultern sowie den oberen Rücken trainierst.",
+      "instructions": [
+        "Beuge dich an den Hüften nach vorne, Kurzhanteln in den hängenden Armen.",
+        "Halte den Rücken flach und die Knie leicht gebeugt.",
+        "Hebe die Kurzhanteln seitlich bis auf Schulterhöhe.",
+        "Spanne die Schulterblätter oben zusammen.",
+        "Senke die Kurzhanteln kontrolliert zurück.",
+        "Wiederhole die gewünschte Anzahl an Wiederholungen."
+      ],
+      "tips": [
+        "Nutze ein leichtes Gewicht, damit die hinteren Schultern arbeiten und nicht der Schwung.",
+        "Ziehe oben die Schulterblätter zusammen.",
+        "Halte die Ellbogen durchgehend leicht und fest gebeugt."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "dumbbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "posterior_deltoid"
+      ],
+      "secondary_muscles": [
+        "rhomboids",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "reverse-fly",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "rear-delt-fly",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "resistance_band"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "ez-bar-spider-curl",
+      "name": "SZ-Stangen Spider Curl",
+      "description": "Ein brustgestützter Curl über der Schrägbank mit der SZ-Stange — isoliert den Bizeps mit strikter Technik.",
+      "instructions": [
+        "Lege dich mit der Brust nach unten auf eine Schrägbank und halte eine SZ-Stange mit Untergriff.",
+        "Lass deine Arme gerade von den Schultern nach unten hängen.",
+        "Curie die Stange zu deinen Schultern hoch.",
+        "Spanne die Bizeps oben in der Bewegung an.",
+        "Senke die Stange kontrolliert ab.",
+        "Für die gewünschte Wiederholungszahl wiederholen."
+      ],
+      "tips": [
+        "Lass die Arme senkrecht hängen und halte die Oberarme fixiert.",
+        "Curle nur mit dem Bizeps — die Bank nimmt dir jede Ausrede zum Schwungholen.",
+        "Senke die Stange bis zur vollen Dehnung, bevor du die nächste Wiederholung beginnst."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "ez_bar",
+      "body_part": "upper_arms",
+      "primary_muscles": [
+        "biceps_brachii"
+      ],
+      "secondary_muscles": [
+        "brachialis",
+        "brachioradialis"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "shoulder_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "requires_bench"
+      ],
+      "variation_group": "bicep-curl",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "flat_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "front-squat",
+      "name": "Front Squat",
+      "description": "Eine Kniebeuge mit der Langhantel vorne auf den Deltamuskeln, die Quadrizeps und Rumpf betont.",
+      "instructions": [
+        "Reinige oder rack die Stange auf deine vorderen Deltamuskeln mit hohen Ellbogen.",
+        "Beuge dich nach unten, halte den Oberkörper aufrecht, bis die Oberschenkel parallel sind.",
+        "Drücke zurück hoch.",
+        "Wiederholen."
+      ],
+      "tips": [
+        "Halte die Ellbogen hoch, um die Stange stabil zu halten.",
+        "Ein aufrechter Oberkörper erhöht die Quadrizeps-Aktivierung."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "barbell",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "erector_spinae",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "leg_day"
+      ],
+      "variation_group": "squat",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "heel-elevated-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "smith-machine-front-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "overhead-squat",
+          "type": "progression_of"
+        },
+        {
+          "to": "squat",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "incline-db-curl",
+      "name": "Schrägbank-Kurzhantelcurl",
+      "description": "Bizepscurl auf der Schrägbank für eine tiefere Dehnung des langen Bizepskopfs.",
+      "instructions": [
+        "Setz dich auf eine 45-Grad-Schrägbank, Kurzhanteln seitlich hängend, Handflächen nach vorn.",
+        "Lass die Arme gerade herunterhängen.",
+        "Curle die Kurzhanteln zu den Schultern.",
+        "Senke sie kontrolliert bis zur vollen Streckung ab.",
+        "Wiederholen."
+      ],
+      "tips": [
+        "Bleibe mit Schultern und Kopf während des Satzes an der Lehne.",
+        "Halte die Ellbogen während des Curls hinten, statt sie nach vorn zu ziehen.",
+        "Wähle ein moderates Gewicht, die gedehnte Position ist besonders fordernd."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "dumbbell",
+      "body_part": "upper_arms",
+      "primary_muscles": [
+        "biceps_brachii"
+      ],
+      "secondary_muscles": [
+        "brachialis"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "arm_day",
+        "knee_safe",
+        "shoulder_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "requires_bench"
+      ],
+      "variation_group": "bicep-curl",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "incline_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "mountain-climbers",
+      "name": "Mountain Climbers",
+      "description": "Eine dynamische Körpergewichtsübung, die Rumpfarbeit mit Kardiotraining verbindet.",
+      "instructions": [
+        "Starte in der hohen Plank-Position.",
+        "Treibe ein Knie zur Brust.",
+        "Wechsle schnell die Beine und treibe das andere Knie nach vorne.",
+        "Wechsle weiterhin in flottem Tempo.",
+        "Wiederhole."
+      ],
+      "tips": [
+        "Halte die Hüfte tief und stabil, ohne nach oben auszuweichen.",
+        "Lass die Schultern über den Handgelenken, der Rumpf bleibt fest.",
+        "Setze die Füße leise und federnd auf den Fußballen auf."
+      ],
+      "category": "cardio",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "beginner",
+      "body_part": "core",
+      "primary_muscles": [
+        "hip_flexors",
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "obliques",
+        "quadriceps"
+      ],
+      "goals": [
+        "endurance"
+      ],
+      "tags": [
+        "core",
+        "cardio",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe",
+        "knee_safe"
+      ],
+      "variation_group": "leg-raise",
+      "is_unilateral": false,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 8.0
+    },
+    {
+      "id": "one-arm-kettlebell-row",
+      "name": "Einarmiges Kettlebell-Rudern",
+      "description": "Ein einarmiges Kettlebell-Rudern mit Abstützung auf einer Bank, das den Latissimus und den oberen Rücken kräftigt.",
+      "instructions": [
+        "Stütze eine Hand und ein Knie auf einer Bank ab.",
+        "Halte eine Kettlebell mit der anderen Hand bei gestrecktem Arm.",
+        "Ziehe die Kettlebell zur Hüfte, indem du den Ellenbogen nach hinten führst.",
+        "Spanne den Rücken oben an.",
+        "Senke die Kettlebell kontrolliert.",
+        "Wiederhole auf einer Seite, dann wechseln."
+      ],
+      "tips": [
+        "Halte den Rücken gerade und den Nacken in Verlängerung der Wirbelsäule.",
+        "Vermeide es, den Oberkörper beim Ziehen aufzudrehen.",
+        "Lass das Schulterblatt unten kontrolliert nach vorn gleiten, bevor du erneut ziehst."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "kettlebell",
+      "body_part": "back",
+      "primary_muscles": [
+        "latissimus_dorsi",
+        "rhomboids"
+      ],
+      "secondary_muscles": [
+        "biceps_brachii",
+        "posterior_deltoid",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "knee_safe",
+        "lower_back_safe",
+        "shoulder_safe",
+        "no_axial_load"
+      ],
+      "variation_group": "row",
+      "is_unilateral": true,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "single-arm-db-row",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "plate-loaded-lateral-raise",
+      "name": "Seitheben an der Scheibenmaschine",
+      "description": "Ein sitzendes Seitheben an einer scheibenbeladenen Maschine, bei dem Polster gegen die Oberarme drücken, sodass die seitlichen Schultern die Last heben, ohne sie mit den Händen zu greifen.",
+      "instructions": [
+        "Stelle die Sitzhöhe so ein, dass der Drehpunkt der Armpolster im Sitzen auf Höhe deiner Schulterspitzen liegt.",
+        "Belade die Scheibenaufnahmen auf beiden Seiten gleichmäßig und setze dich mit flach anliegendem Rücken an das Polster.",
+        "Lege die Außenseiten deiner Oberarme an die Polster, die Ellenbogen gebeugt und die Arme nach unten hängend.",
+        "Drücke gegen die Polster nach außen und oben, bis deine Oberarme etwa auf Schulterhöhe sind.",
+        "Senke kontrolliert ab, bis die Arme wieder an den Seiten liegen, und wiederhole für die gewünschte Anzahl an Wiederholungen."
+      ],
+      "tips": [
+        "Stelle zuerst den Sitz ein. Liegt der Drehpunkt unter deiner Schulter, führen die Polster den Arm quer vor den Körper statt zur Seite, und die seitliche Schulter ist nicht mehr der arbeitende Muskel.",
+        "Drücke mit dem Arm, nicht mit der Hand. Die Griffe sind nur dafür da, dass die Arme nicht von den Polstern rutschen — festes Zugreifen holt Bizeps und Unterarme in ein Heben, das reine Deltamuskelarbeit sein sollte.",
+        "Stoppe auf Schulterhöhe. Weiter nach oben übergibt den letzten Teil der Wiederholung dem Trapez, und die Maschine lässt dich gewähren."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "equipment": "plate_loaded_lateral_raise_machine",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "anterior_deltoid",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "lateral-raise",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "lateral-raise",
+          "type": "alternative"
+        },
+        {
+          "to": "single-arm-plate-loaded-lateral-raise",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "dumbbell",
+        "lateral_raise_machine"
+      ],
+      "synonyms": [
+        "plate loaded lateral raise",
+        "iso-lateral lateral raise",
+        "plate loaded side raise",
+        "machine side raise",
+        "hammer strength lateral raise",
+        "plate loaded delt raise"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "pull-up",
+      "name": "Klimmzug",
+      "description": "Eine Ganzkörper-Zugübung mit dem eigenen Körpergewicht, die Latissimus und Bizeps beansprucht.",
+      "instructions": [
+        "Hänge an der Stange im Oberhandgriff, etwas breiter als schulterbreit.",
+        "Ziehe dich hoch, bis das Kinn über der Stange ist.",
+        "Senke dich kontrolliert in den toten Hang.",
+        "Wiederhole."
+      ],
+      "tips": [
+        "Vermeide Schwingen oder Kipping.",
+        "Aktiviere den Latissimus, indem du die Ellbogen nach unten ziehst."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "pull_up_bar",
+      "body_part": "back",
+      "primary_muscles": [
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "biceps_brachii",
+        "posterior_deltoid",
+        "rhomboids"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "pull_day",
+        "calisthenics",
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "pull-up",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "behind-the-neck-pull-ups",
+          "type": "alternative"
+        },
+        {
+          "to": "close-grip-pull-ups",
+          "type": "progression_of"
+        },
+        {
+          "to": "muscle-ups",
+          "type": "progression_of"
+        },
+        {
+          "to": "weighted-pull-up",
+          "type": "progression_of"
+        },
+        {
+          "to": "lat-pulldown",
+          "type": "regression_of"
+        },
+        {
+          "to": "scapular-pull-ups",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "rings"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "reverse-grip-lat-pulldown",
+      "name": "Latzug im Untergriff",
+      "description": "Eine Latzug-Variante im Untergriff, die den Bizeps stärker mit einbezieht.",
+      "instructions": [
+        "Befestige eine gerade Stange am Latzuggerät.",
+        "Greife die Stange im Untergriff, schulterbreit.",
+        "Setze dich und sichere deine Oberschenkel unter dem Polster.",
+        "Ziehe die Stange bis zur oberen Brust herunter.",
+        "Spanne Latissimus und Bizeps am unteren Punkt an.",
+        "Führe die Stange kontrolliert zur Ausgangsposition zurück.",
+        "Wiederhole für die gewünschte Anzahl an Wiederholungen."
+      ],
+      "tips": [
+        "Halte die Brust aufrecht und lehne dich nicht übermäßig zurück.",
+        "Ziehe mit den Ellbogen, nicht nur mit den Händen.",
+        "Spanne den Latissimus am unteren Punkt der Bewegung an."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "cable",
+      "body_part": "back",
+      "primary_muscles": [
+        "biceps_brachii",
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "posterior_deltoid",
+        "rhomboids"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "lower_back_safe",
+        "knee_safe",
+        "no_axial_load",
+        "shoulder_safe"
+      ],
+      "variation_group": "pull-up",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "side-lying-lateral-raise",
+      "name": "Seitheben Seitliegend",
+      "description": "Eine Kurzhantel-Isolationsübung für den seitlichen Schultermuskel in der Seitenlage auf einer flachen Bank, die konstante Spannung ohne Schwungnutzung gewährleistet.",
+      "instructions": [
+        "Auf einer flachen Bank seitlich liegen, den unteren Arm zur Kopfstütze oder zum Griff an der Bank nutzen.",
+        "Kurzhantel in der oberen Hand halten, Arm locker an der Seite.",
+        "Mit leicht gebeugtem Ellbogen die Hantel anheben, bis der Arm senkrecht zum Boden steht.",
+        "Kurz oben halten, dann die Hantel langsam zurück zur Seite absenken.",
+        "Alle Wiederholungen ausführen, dann Seite wechseln."
+      ],
+      "tips": [
+        "Oberkörper ruhig halten — nur der arbeitende Arm soll sich bewegen.",
+        "Die liegende Position verhindert Schwung und isoliert den seitlichen Deltamuskel effektiv.",
+        "Leichteres Gewicht als beim stehenden Seitheben wählen — der Hebelarm ist anspruchsvoller."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "equipment": "dumbbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "supraspinatus",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "shoulder_focus",
+        "push_day",
+        "requires_bench"
+      ],
+      "is_unilateral": true,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "lateral-raise",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "cable"
+      ],
+      "synonyms": [
+        "side-lying lateral raise"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "smith-machine-front-squat",
+      "name": "Smith Machine Front Squat",
+      "description": "Eine Kniebeuge an der Smith Machine mit der Stange vorn auf den Schultern abgelegt, bei der die geführte Bahn und der aufrechte Oberkörper die Arbeit im Quadrizeps halten.",
+      "instructions": [
+        "Stelle die Stange auf Höhe der oberen Brust ein und tritt darunter, sodass sie vorn auf deinen Schultern am Schlüsselbein aufliegt.",
+        "Kreuze die Arme über der Stange oder nimm einen offenen Front-Rack-Griff und schiebe die Ellenbogen hoch, bis die Oberarme fast parallel zum Boden stehen.",
+        "Entracke die Stange und stelle die Füße etwa schulterbreit und leicht vor der Stange auf.",
+        "Gehe gerade nach unten, halte die Ellenbogen oben und den Oberkörper aufrecht, bis die Oberschenkel mindestens parallel zum Boden sind.",
+        "Drücke über die Fußmitte wieder nach oben und wiederhole für die gewünschte Anzahl an Wiederholungen."
+      ],
+      "tips": [
+        "Hohe Ellenbogen sind die ganze Übung. Sobald sie absinken, rollt die Stange von den Schultern auf die Hände und das Front Rack bricht zusammen.",
+        "Setze die Sicherheitsablagen knapp unter deine tiefste Position, bevor du überhaupt entrackst — beim Front Squat ist das Ablegen der Stange der schnellste Ausweg aus einer misslungenen Wiederholung.",
+        "Etwas vor der Stange zu stehen erlaubt dir einen senkrechten Oberkörper. Bei fixer Bahn zwingt dich ein Stand direkt unter der Stange in die Vorlage und schiebt die Stange vom Front Rack."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "beginner",
+      "equipment": "smith_machine",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "erector_spinae",
+        "gluteus_medius",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "leg_day"
+      ],
+      "variation_group": "squat",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "front-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "smith-machine-squat",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "hack_squat"
+      ],
+      "synonyms": [
+        "smith machine front squat",
+        "smith front squat",
+        "front squat on smith machine",
+        "front rack smith squat",
+        "machine front squat",
+        "guided front squat"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "stability-ball-knee-tuck",
+      "name": "Stability-Ball-Knee-Tuck",
+      "description": "Ein Knee Tuck aus der Plank-Position mit den Füßen auf einem Stability Ball — der Ball wird unter die Hüfte gerollt, um die Bauchmuskulatur dynamisch zu belasten.",
+      "instructions": [
+        "Starte in einem hohen Plank mit den Schienbeinen oder Fußrücken auf dem Stability Ball.",
+        "Hände unter den Schultern, Körper in einer geraden Linie.",
+        "Spanne den Core an und ziehe den Ball zur Brust, indem du die Knie einziehst.",
+        "Rolle ihn zurück, indem du die Beine vollständig in die Plank-Position streckst.",
+        "Wiederhole für die empfohlene Anzahl an Wiederholungen."
+      ],
+      "tips": [
+        "Die Hüfte hebt sich nicht; halte den Rumpf während des Einrollens durchgehend eben.",
+        "Schultern bleiben über den Handgelenken — nicht nach vorne driften lassen."
+      ],
+      "category": "strength",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "stability_ball",
+      "body_part": "core",
+      "primary_muscles": [
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "anterior_deltoid",
+        "hip_flexors",
+        "obliques",
+        "serratus_anterior"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "core"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "ball-pike",
+          "type": "progression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    }
+  ],
+  "relation_targets": {
+    "battle-rope-double-slam": "Battle-Rope Doppelschlag",
+    "rear-delt-fly": "Hinterer Deltamuskel Fly",
+    "heel-elevated-squat": "Kniebeuge mit erhöhten Fersen",
+    "overhead-squat": "Überkopf-Kniebeuge",
+    "squat": "Langhantel-Kniebeuge",
+    "single-arm-db-row": "Einarmiges Kurzhantel-Rudern",
+    "lateral-raise": "Kurzhantel Seitheben",
+    "single-arm-plate-loaded-lateral-raise": "Einarmiges Seitheben an der Scheibenmaschine",
+    "behind-the-neck-pull-ups": "Klimmzug in den Nacken",
+    "close-grip-pull-ups": "Klimmzüge enger Griff",
+    "muscle-ups": "Muscle-Up",
+    "weighted-pull-up": "Klimmzug mit Zusatzgewicht",
+    "lat-pulldown": "Latzug",
+    "scapular-pull-ups": "Scapular Pull-Ups",
+    "smith-machine-squat": "Smith-Maschine Kniebeuge",
+    "ball-pike": "Ball Pike"
+  }
+}

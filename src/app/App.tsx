@@ -19,6 +19,8 @@ import { WorkoutPage } from "../features/workout/WorkoutPage";
 
 import { AdminDashboard } from "../features/admin/AdminDashboard";
 import { AdminUsersPage } from "../features/admin/AdminUsersPage";
+import { ExerciseLibraryPage } from "../features/admin/ExerciseLibraryPage";
+import { ProgramsPage } from "../features/admin/ProgramsPage";
 
 /* ============================================================
    APP SHELL
@@ -84,6 +86,28 @@ function Shell({
               >
                 Users
               </Link>
+
+              <Link
+  to="/admin/exercises"
+  className={
+    location.pathname.startsWith("/admin/exercises")
+      ? "active"
+      : ""
+  }
+>
+  Exercises
+</Link>
+<Link
+  to="/admin/programs"
+  className={
+    location.pathname.startsWith("/admin/programs")
+      ? "active"
+      : ""
+  }
+>
+  Programs
+</Link>
+
             </>
           ) : (
             <>
@@ -511,6 +535,23 @@ function AuthenticatedRoutes() {
             </AdminGuard>
           }
         />
+
+        <Route
+  path="/admin/exercises"
+  element={
+    <AdminGuard>
+      <ExerciseLibraryPage />
+    </AdminGuard>
+  }
+/>
+<Route
+  path="/admin/programs"
+  element={
+    <AdminGuard>
+      <ProgramsPage />
+    </AdminGuard>
+  }
+/>
 
         {/* ====================================================
             UNKNOWN AUTHENTICATED ROUTE

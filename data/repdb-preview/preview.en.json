@@ -1,0 +1,1613 @@
+{
+  "schema_version": 3,
+  "generated_at": "2026-08-14T12:00:24Z",
+  "source": "repdb-preview",
+  "locale": "en",
+  "enum_labels": {
+    "category": {
+      "cardio": "Cardio",
+      "olympic": "Olympic",
+      "plyometrics": "Plyometrics",
+      "strength": "Strength",
+      "stretching": "Stretching",
+      "strongman": "Strongman"
+    },
+    "force_type": {
+      "dynamic": "Dynamic",
+      "pull": "Pull",
+      "push": "Push",
+      "static": "Static"
+    },
+    "mechanic": {
+      "compound": "Compound",
+      "isolation": "Isolation"
+    },
+    "difficulty": {
+      "advanced": "Advanced",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate"
+    },
+    "body_part": {
+      "back": "Back",
+      "chest": "Chest",
+      "core": "Core",
+      "full_body": "Full body",
+      "lower_arms": "Lower arms",
+      "lower_legs": "Lower legs",
+      "shoulders": "Shoulders",
+      "upper_arms": "Upper arms",
+      "upper_legs": "Upper legs"
+    },
+    "goals": {
+      "core": "Core",
+      "endurance": "Endurance",
+      "hypertrophy": "Hypertrophy",
+      "mobility": "Mobility",
+      "power": "Power",
+      "rehabilitation": "Rehabilitation",
+      "strength": "Strength"
+    }
+  },
+  "muscles": {
+    "adductors": {
+      "name": "Adductors",
+      "name_scientific": "Hip Adductors",
+      "region": "upper_legs",
+      "synonyms": [
+        "hip adductors",
+        "inner thigh",
+        "adductor muscles",
+        "groin"
+      ],
+      "image": "adductors.webp"
+    },
+    "anterior_deltoid": {
+      "name": "Front Delts",
+      "name_scientific": "Anterior Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "front deltoid",
+        "anterior delt",
+        "front delt",
+        "anterior deltoid"
+      ],
+      "image": "anterior-deltoid.webp"
+    },
+    "biceps_brachii": {
+      "name": "Biceps",
+      "name_scientific": "Biceps Brachii",
+      "region": "upper_arms",
+      "synonyms": [
+        "bicep",
+        "biceps brachii",
+        "biceps muscle",
+        "guns"
+      ],
+      "image": "biceps-brachii.webp"
+    },
+    "brachialis": {
+      "name": "Brachialis",
+      "name_scientific": "Brachialis",
+      "region": "upper_arms",
+      "synonyms": [
+        "brachialis muscle",
+        "lower bicep"
+      ],
+      "image": "brachialis.webp"
+    },
+    "brachioradialis": {
+      "name": "Brachioradialis",
+      "name_scientific": "Brachioradialis",
+      "region": "lower_arms",
+      "synonyms": [
+        "brachioradialis muscle",
+        "forearm flexor"
+      ],
+      "image": "brachioradialis.webp"
+    },
+    "erector_spinae": {
+      "name": "Lower Back",
+      "name_scientific": "Erector Spinae",
+      "region": "back",
+      "synonyms": [
+        "erector spinae",
+        "spinal erectors",
+        "lower back muscles",
+        "back extensors"
+      ],
+      "image": "erector-spinae.webp"
+    },
+    "forearm_flexors": {
+      "name": "Forearm Flexors",
+      "name_scientific": "Wrist Flexor Muscles",
+      "region": "lower_arms",
+      "synonyms": [
+        "wrist flexors",
+        "flexor carpi",
+        "forearm flexors",
+        "inner forearm"
+      ],
+      "image": "forearm-flexors.webp"
+    },
+    "gluteus_maximus": {
+      "name": "Glutes",
+      "name_scientific": "Gluteus Maximus",
+      "region": "upper_legs",
+      "synonyms": [
+        "glute",
+        "glutes",
+        "gluteus maximus",
+        "buttocks",
+        "butt"
+      ],
+      "image": "gluteus-maximus.webp"
+    },
+    "gluteus_medius": {
+      "name": "Glute Medius",
+      "name_scientific": "Gluteus Medius",
+      "region": "upper_legs",
+      "synonyms": [
+        "glute med",
+        "gluteus medius",
+        "side glute",
+        "hip abductor glute"
+      ],
+      "image": "gluteus-medius.webp"
+    },
+    "hamstrings": {
+      "name": "Hamstrings",
+      "name_scientific": "Hamstring Muscles",
+      "region": "upper_legs",
+      "synonyms": [
+        "hamstring",
+        "hamstrings",
+        "posterior thigh",
+        "biceps femoris"
+      ],
+      "image": "hamstrings.webp"
+    },
+    "hip_flexors": {
+      "name": "Hip Flexors",
+      "name_scientific": "Hip Flexor Muscles",
+      "region": "core",
+      "synonyms": [
+        "hip flexor",
+        "iliopsoas",
+        "psoas",
+        "iliacus",
+        "hip flexors"
+      ],
+      "image": "hip-flexors.webp"
+    },
+    "lateral_deltoid": {
+      "name": "Side Delts",
+      "name_scientific": "Lateral Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "side deltoid",
+        "lateral delt",
+        "side delt",
+        "medial deltoid",
+        "lateral deltoid"
+      ],
+      "image": "lateral-deltoid.webp"
+    },
+    "latissimus_dorsi": {
+      "name": "Lats",
+      "name_scientific": "Latissimus Dorsi",
+      "region": "back",
+      "synonyms": [
+        "lats",
+        "lat",
+        "latissimus dorsi",
+        "latissimus",
+        "back wings"
+      ],
+      "image": "latissimus-dorsi.webp"
+    },
+    "obliques": {
+      "name": "Obliques",
+      "name_scientific": "Oblique Abdominals",
+      "region": "core",
+      "synonyms": [
+        "oblique",
+        "obliques",
+        "side abs",
+        "external oblique",
+        "internal oblique"
+      ],
+      "image": "obliques.webp"
+    },
+    "posterior_deltoid": {
+      "name": "Rear Delts",
+      "name_scientific": "Posterior Deltoid",
+      "region": "shoulders",
+      "synonyms": [
+        "rear deltoid",
+        "posterior delt",
+        "rear delt",
+        "back delt",
+        "posterior deltoid"
+      ],
+      "image": "posterior-deltoid.webp"
+    },
+    "quadriceps": {
+      "name": "Quads",
+      "name_scientific": "Quadriceps Femoris",
+      "region": "upper_legs",
+      "synonyms": [
+        "quad",
+        "quads",
+        "quadriceps",
+        "quadriceps femoris",
+        "front thigh"
+      ],
+      "image": "quadriceps.webp"
+    },
+    "rectus_abdominis": {
+      "name": "Abs",
+      "name_scientific": "Rectus Abdominis",
+      "region": "core",
+      "synonyms": [
+        "abs",
+        "six-pack",
+        "rectus abdominis",
+        "abdominals",
+        "stomach muscles"
+      ],
+      "image": "rectus-abdominis.webp"
+    },
+    "rhomboids": {
+      "name": "Rhomboids",
+      "name_scientific": "Rhomboid Muscles",
+      "region": "back",
+      "synonyms": [
+        "rhomboid",
+        "rhomboids",
+        "rhomboid major",
+        "rhomboid minor",
+        "upper back"
+      ],
+      "image": "rhomboids.webp"
+    },
+    "serratus_anterior": {
+      "name": "Serratus",
+      "name_scientific": "Serratus Anterior",
+      "region": "chest",
+      "synonyms": [
+        "serratus",
+        "serratus anterior",
+        "boxer's muscle",
+        "rib muscles"
+      ],
+      "image": "serratus-anterior.webp"
+    },
+    "supraspinatus": {
+      "name": "Supraspinatus",
+      "name_scientific": "Supraspinatus",
+      "region": "shoulders",
+      "synonyms": [
+        "supraspinatus",
+        "rotator cuff",
+        "shoulder stabilizer"
+      ],
+      "image": "lateral-deltoid.webp"
+    },
+    "trapezius": {
+      "name": "Traps",
+      "name_scientific": "Trapezius",
+      "region": "back",
+      "synonyms": [
+        "trap",
+        "traps",
+        "trapezius",
+        "upper traps",
+        "lower traps",
+        "mid traps"
+      ],
+      "image": "trapezius.webp"
+    },
+    "triceps_brachii": {
+      "name": "Triceps",
+      "name_scientific": "Triceps Brachii",
+      "region": "upper_arms",
+      "synonyms": [
+        "tricep",
+        "triceps",
+        "triceps brachii",
+        "horseshoe",
+        "tris"
+      ],
+      "image": "triceps-brachii.webp"
+    }
+  },
+  "equipment": {
+    "barbell": {
+      "name": "Barbell",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "bar",
+        "olympic barbell",
+        "straight bar",
+        "olympic bar",
+        "power bar"
+      ],
+      "image": "barbell.webp"
+    },
+    "battle_rope": {
+      "name": "Battle Rope",
+      "tags": [
+        "conditioning_tool",
+        "full_body",
+        "cardio"
+      ],
+      "synonyms": [
+        "battle ropes",
+        "heavy rope",
+        "training rope",
+        "conditioning rope"
+      ],
+      "image": "battle-rope.webp"
+    },
+    "cable": {
+      "name": "Cable Machine",
+      "tags": [
+        "cable"
+      ],
+      "synonyms": [
+        "cable pulley",
+        "functional trainer",
+        "cable crossover",
+        "cable column",
+        "cable station",
+        "pulley machine",
+        "cable tower"
+      ],
+      "image": "cable.webp"
+    },
+    "dumbbell": {
+      "name": "Dumbbell",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "db",
+        "dumbell",
+        "hex dumbbell",
+        "rubber dumbbell",
+        "hand weight"
+      ],
+      "image": "dumbbell.webp"
+    },
+    "ez_bar": {
+      "name": "EZ Curl Bar",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "ez bar",
+        "ez curl bar",
+        "curl bar",
+        "w-bar",
+        "cambered bar",
+        "zig-zag bar"
+      ],
+      "image": "ez-bar.webp"
+    },
+    "flat_bench": {
+      "name": "Flat Bench",
+      "tags": [
+        "free_weight",
+        "upper_body"
+      ],
+      "synonyms": [
+        "bench",
+        "flat weight bench",
+        "utility bench",
+        "adjustable bench (flat)"
+      ],
+      "image": "flat-bench.webp"
+    },
+    "hack_squat": {
+      "name": "Hack Squat Machine",
+      "tags": [
+        "machine",
+        "squat",
+        "lower_body",
+        "legs"
+      ],
+      "synonyms": [
+        "hack squat",
+        "angled squat",
+        "reverse leg press",
+        "plate-loaded hack squat",
+        "v-squat",
+        "v squat",
+        "v-squat machine"
+      ],
+      "image": "hack-squat.webp"
+    },
+    "incline_bench": {
+      "name": "Incline Bench",
+      "tags": [
+        "free_weight",
+        "upper_body"
+      ],
+      "synonyms": [
+        "incline weight bench",
+        "adjustable incline bench",
+        "adjustable bench (incline)"
+      ],
+      "image": "incline-bench.webp"
+    },
+    "kettlebell": {
+      "name": "Kettlebell",
+      "tags": [
+        "free_weight"
+      ],
+      "synonyms": [
+        "kb",
+        "cast iron kettlebell",
+        "competition kettlebell",
+        "girya"
+      ],
+      "image": "kettlebell.webp"
+    },
+    "lateral_raise_machine": {
+      "name": "Lateral Raise Machine",
+      "tags": [
+        "machine",
+        "push",
+        "upper_body",
+        "shoulders"
+      ],
+      "synonyms": [
+        "seated lateral raise",
+        "side raise machine",
+        "delt raise machine",
+        "shoulder raise machine"
+      ],
+      "image": "lateral-raise-machine.webp"
+    },
+    "plate_loaded_lateral_raise_machine": {
+      "name": "Plate-Loaded Lateral Raise Machine",
+      "tags": [
+        "machine",
+        "push",
+        "upper_body",
+        "shoulders"
+      ],
+      "synonyms": [
+        "iso-lateral raise machine",
+        "plate loaded side raise",
+        "plate loaded delt raise",
+        "iso lateral lateral raise"
+      ],
+      "image": "plate-loaded-lateral-raise-machine.webp"
+    },
+    "pull_up_bar": {
+      "name": "Pull-Up Bar",
+      "tags": [
+        "bodyweight_aid",
+        "pull",
+        "upper_body"
+      ],
+      "synonyms": [
+        "chin-up bar",
+        "chin up bar",
+        "power tower",
+        "pull up bar",
+        "doorway bar"
+      ],
+      "image": "pull-up-bar.webp"
+    },
+    "resistance_band": {
+      "name": "Resistance Band",
+      "tags": [
+        "band",
+        "full_body"
+      ],
+      "synonyms": [
+        "power band",
+        "pull-up band",
+        "assistance band",
+        "tube band",
+        "tubing band",
+        "long resistance band"
+      ],
+      "image": "resistance-band.webp"
+    },
+    "rings": {
+      "name": "Gymnastic Rings",
+      "tags": [
+        "rope_suspension",
+        "bodyweight_aid",
+        "upper_body"
+      ],
+      "synonyms": [
+        "gymnastic rings",
+        "still rings",
+        "wood rings",
+        "olympic rings"
+      ],
+      "image": "rings.webp"
+    },
+    "smith_machine": {
+      "name": "Smith Machine",
+      "tags": [
+        "machine"
+      ],
+      "synonyms": [
+        "smith bar",
+        "guided barbell",
+        "fixed barbell",
+        "smith press"
+      ],
+      "image": "smith-machine.webp"
+    },
+    "stability_ball": {
+      "name": "Stability Ball",
+      "tags": [
+        "ball",
+        "conditioning_tool",
+        "core"
+      ],
+      "synonyms": [
+        "swiss ball",
+        "exercise ball",
+        "yoga ball",
+        "physio ball",
+        "gym ball",
+        "balance ball"
+      ],
+      "image": "stability-ball.webp"
+    }
+  },
+  "exercises": [
+    {
+      "id": "battle-ropes",
+      "name": "Battle Ropes",
+      "description": "A high-intensity conditioning movement using thick ropes, training the upper back, shoulders, and grip.",
+      "instructions": [
+        "Anchor the ropes to a fixed point and grab one end in each hand.",
+        "Step back so the ropes have moderate slack.",
+        "Drop into a quarter squat with feet shoulder-width.",
+        "Drive each arm up and down rapidly to send waves through the ropes.",
+        "Continue for the prescribed work interval."
+      ],
+      "tips": [
+        "Stay in the quarter-squat the entire interval.",
+        "Drive force from the legs and hips, not just the arms.",
+        "Keep the waves consistent and tight."
+      ],
+      "category": "cardio",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "battle_rope",
+      "body_part": "full_body",
+      "primary_muscles": [
+        "anterior_deltoid",
+        "lateral_deltoid",
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "forearm_flexors",
+        "quadriceps",
+        "rectus_abdominis",
+        "trapezius"
+      ],
+      "goals": [
+        "endurance",
+        "power"
+      ],
+      "tags": [
+        "full_body",
+        "conditioning"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "battle-rope-double-slam",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "main"
+        ],
+        "flat": [
+          "main"
+        ]
+      },
+      "synonyms": [
+        "battle ropes"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 10.3
+    },
+    {
+      "id": "behind-the-neck-press",
+      "name": "Behind the Neck Press",
+      "description": "An overhead press performed with the barbell starting behind the neck, emphasizing the front and side deltoids.",
+      "instructions": [
+        "Sit or stand with a barbell resting on your upper traps behind your neck.",
+        "Grip the bar wider than shoulder width.",
+        "Press the bar straight up overhead until your arms are extended.",
+        "Lower the bar back to the starting position under control.",
+        "Repeat for the desired number of reps."
+      ],
+      "tips": [
+        "Lower the bar only as far as your shoulders allow comfortably.",
+        "Keep your forearms vertical under the bar throughout the press.",
+        "Brace your core to avoid arching the lower back overhead."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "barbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "anterior_deltoid",
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "trapezius",
+        "triceps_brachii"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "knee_safe"
+      ],
+      "variation_group": "overhead-press",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "bench-leg-pull-in",
+      "name": "Bench Leg Pull-In",
+      "description": "A supine core exercise on a flat bench, pulling the knees toward the chest to train the rectus abdominis.",
+      "instructions": [
+        "Lie on your back on a flat bench and grip the sides behind your head for support.",
+        "Extend your legs straight out with heels just above the bench surface.",
+        "Pull your knees toward your chest, lifting the hips slightly off the bench.",
+        "Extend the legs back out under control without letting the heels touch the bench.",
+        "Repeat for the desired number of repetitions."
+      ],
+      "tips": [
+        "Keep the lower back pressed into the bench to reduce hip flexor dominance.",
+        "Control the eccentric; do not let gravity drop the legs.",
+        "Squeeze the abs at the top of each rep for a stronger contraction."
+      ],
+      "category": "strength",
+      "force_type": "dynamic",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "body_part": "core",
+      "primary_muscles": [
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "hip_flexors",
+        "obliques"
+      ],
+      "goals": [
+        "hypertrophy",
+        "endurance"
+      ],
+      "tags": [
+        "core",
+        "calisthenics",
+        "requires_bench"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "flat_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 3.5
+    },
+    {
+      "id": "cossack-squat",
+      "name": "Cossack Squat",
+      "description": "A wide-stance lateral squat that sinks the body deep over one bent leg while the other stays straight, training single-leg strength, hip mobility, and adductor flexibility.",
+      "instructions": [
+        "Stand in a wide stance with toes turned slightly out.",
+        "Shift your weight to one side, bending that knee and sinking into a deep squat.",
+        "Keep the trailing leg straight with the heel down and toes up.",
+        "Sink as low as your mobility allows, keeping the chest tall.",
+        "Drive through the bent leg back to center, then repeat to the other side."
+      ],
+      "tips": [
+        "Keep the working heel planted -- do not roll onto the toes.",
+        "Point the straight leg's toes up to keep tension in the adductors.",
+        "Hold a light weight at your chest for a counterbalance if needed."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "adductors",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "is_unilateral": true,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "synonyms": [
+        "cossack lunge",
+        "side squat"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "dumbbell-reverse-fly",
+      "name": "Dumbbell Reverse Fly",
+      "description": "A hinged isolation exercise raising dumbbells out to the sides, targeting the rear deltoids and upper back.",
+      "instructions": [
+        "Hinge forward at the hips holding dumbbells with arms hanging down.",
+        "Keep your back flat and knees slightly bent.",
+        "Raise the dumbbells out to the sides until level with your shoulders.",
+        "Squeeze your shoulder blades together at the top.",
+        "Lower the dumbbells back with control.",
+        "Repeat for the desired number of reps."
+      ],
+      "tips": [
+        "Use a light weight so the rear delts do the work, not momentum.",
+        "Squeeze your shoulder blades together at the top.",
+        "Keep a soft, fixed bend in your elbows throughout."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "dumbbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "posterior_deltoid"
+      ],
+      "secondary_muscles": [
+        "rhomboids",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "reverse-fly",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "rear-delt-fly",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "resistance_band"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "ez-bar-spider-curl",
+      "name": "EZ Bar Spider Curl",
+      "description": "A chest-supported curl over an incline bench with an EZ bar, isolating the biceps with strict form.",
+      "instructions": [
+        "Lie chest down on an incline bench holding an EZ bar with underhand grip.",
+        "Let your arms hang straight down from your shoulders.",
+        "Curl the bar up toward your shoulders.",
+        "Squeeze your biceps at the top of the movement.",
+        "Lower the bar back down with control.",
+        "Repeat for the desired number of reps."
+      ],
+      "tips": [
+        "Let your arms hang straight down and keep the upper arms fixed.",
+        "Curl with the biceps only — the bench removes any excuse to swing.",
+        "Lower to a full stretch before starting the next rep."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "ez_bar",
+      "body_part": "upper_arms",
+      "primary_muscles": [
+        "biceps_brachii"
+      ],
+      "secondary_muscles": [
+        "brachialis",
+        "brachioradialis"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "shoulder_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "requires_bench"
+      ],
+      "variation_group": "bicep-curl",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "flat_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "front-squat",
+      "name": "Front Squat",
+      "description": "A barbell squat with the bar held in front on the deltoids, emphasizing quads and core.",
+      "instructions": [
+        "Clean or rack the bar to your front deltoids with elbows high.",
+        "Squat down keeping torso upright until thighs are parallel.",
+        "Drive back up.",
+        "Repeat."
+      ],
+      "tips": [
+        "Maintain high elbows to keep the bar stable.",
+        "A more upright torso increases quad activation."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "barbell",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "erector_spinae",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "leg_day"
+      ],
+      "variation_group": "squat",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "heel-elevated-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "smith-machine-front-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "overhead-squat",
+          "type": "progression_of"
+        },
+        {
+          "to": "squat",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "incline-db-curl",
+      "name": "Incline Dumbbell Curl",
+      "description": "A bicep curl on an incline bench for a deeper stretch of the long head.",
+      "instructions": [
+        "Sit on an incline bench set to 45 degrees, holding dumbbells at your sides.",
+        "Let your arms hang straight down with palms forward.",
+        "Curl the dumbbells up toward your shoulders.",
+        "Lower with control to full extension.",
+        "Repeat."
+      ],
+      "tips": [
+        "Keep your head and shoulders against the bench throughout.",
+        "Don't let your elbows drift forward as you curl.",
+        "Avoid shrugging your shoulders forward as you lift the weight."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "isolation",
+      "difficulty": "intermediate",
+      "equipment": "dumbbell",
+      "body_part": "upper_arms",
+      "primary_muscles": [
+        "biceps_brachii"
+      ],
+      "secondary_muscles": [
+        "brachialis"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "arm_day",
+        "knee_safe",
+        "shoulder_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "requires_bench"
+      ],
+      "variation_group": "bicep-curl",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "additional_required_equipment": [
+        "incline_bench"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "mountain-climbers",
+      "name": "Mountain Climbers",
+      "description": "A dynamic bodyweight exercise combining core work with cardio.",
+      "instructions": [
+        "Start in a high plank position.",
+        "Drive one knee toward your chest.",
+        "Quickly switch legs, driving the other knee forward.",
+        "Continue alternating at a brisk pace.",
+        "Repeat."
+      ],
+      "tips": [
+        "Keep your hips level and low rather than piking upward.",
+        "Keep your shoulders stacked directly over your wrists.",
+        "Maintain a steady breathing rhythm as the pace increases."
+      ],
+      "category": "cardio",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "beginner",
+      "body_part": "core",
+      "primary_muscles": [
+        "hip_flexors",
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "obliques",
+        "quadriceps"
+      ],
+      "goals": [
+        "endurance"
+      ],
+      "tags": [
+        "core",
+        "cardio",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe",
+        "knee_safe"
+      ],
+      "variation_group": "leg-raise",
+      "is_unilateral": false,
+      "is_bodyweight": true,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 8.0
+    },
+    {
+      "id": "one-arm-kettlebell-row",
+      "name": "One Arm Kettlebell Row",
+      "description": "A unilateral rowing exercise with bench support, building the lats and mid-back one side at a time.",
+      "instructions": [
+        "Place one hand and knee on a bench for support.",
+        "Hold a kettlebell in the opposite hand with your arm extended.",
+        "Pull the kettlebell toward your hip by driving your elbow back.",
+        "Squeeze your back at the top of the movement.",
+        "Lower the kettlebell with control.",
+        "Complete reps on one side, then switch."
+      ],
+      "tips": [
+        "Keep your torso square to the floor throughout the set.",
+        "Pull with your back muscles rather than just your arm.",
+        "Keep your neck neutral, eyes on the floor just ahead."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "kettlebell",
+      "body_part": "back",
+      "primary_muscles": [
+        "latissimus_dorsi",
+        "rhomboids"
+      ],
+      "secondary_muscles": [
+        "biceps_brachii",
+        "posterior_deltoid",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "knee_safe",
+        "lower_back_safe",
+        "shoulder_safe",
+        "no_axial_load"
+      ],
+      "variation_group": "row",
+      "is_unilateral": true,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "single-arm-db-row",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "plate-loaded-lateral-raise",
+      "name": "Plate-Loaded Lateral Raise",
+      "description": "A seated lateral raise on a plate-loaded machine, where pads bear against the upper arms so the side deltoids lift the load without the hands gripping it.",
+      "instructions": [
+        "Set the seat height so that the pivot of the arm pads lines up with the point of your shoulders when you sit down.",
+        "Load the plate horns evenly on both sides and sit with your back flat against the pad.",
+        "Place the outside of your upper arms against the pads with your elbows bent and your arms hanging down.",
+        "Push out and up against the pads until your upper arms are roughly level with your shoulders.",
+        "Lower under control until your arms are back at your sides, and repeat for the desired number of repetitions."
+      ],
+      "tips": [
+        "Set the seat first. If the pivot sits below your shoulder the pads drive your arm across your body instead of out to the side, and the side deltoid stops being the muscle doing the work.",
+        "Push with the arm, not the hand. The handles are there to stop your arms sliding off the pads -- gripping hard pulls the biceps and forearms into a raise that should be all deltoid.",
+        "Stop at shoulder height. Going higher hands the last part of the rep to the traps, and the machine will happily let you."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "equipment": "plate_loaded_lateral_raise_machine",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "anterior_deltoid",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "lateral-raise",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "lateral-raise",
+          "type": "alternative"
+        },
+        {
+          "to": "single-arm-plate-loaded-lateral-raise",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "dumbbell",
+        "lateral_raise_machine"
+      ],
+      "synonyms": [
+        "plate loaded lateral raise",
+        "iso-lateral lateral raise",
+        "plate loaded side raise",
+        "machine side raise",
+        "hammer strength lateral raise",
+        "plate loaded delt raise"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "pull-up",
+      "name": "Pull-Up",
+      "description": "A bodyweight compound pull targeting the lats and biceps.",
+      "instructions": [
+        "Hang from a bar with an overhand grip, slightly wider than shoulder-width.",
+        "Pull yourself up until your chin is over the bar.",
+        "Lower yourself under control to a dead hang.",
+        "Repeat."
+      ],
+      "tips": [
+        "Avoid swinging or kipping.",
+        "Engage your lats by pulling your elbows down."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "pull_up_bar",
+      "body_part": "back",
+      "primary_muscles": [
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "biceps_brachii",
+        "posterior_deltoid",
+        "rhomboids"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "pull_day",
+        "calisthenics",
+        "knee_safe",
+        "no_axial_load",
+        "lower_back_safe",
+        "shoulder_safe"
+      ],
+      "variation_group": "pull-up",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "behind-the-neck-pull-ups",
+          "type": "alternative"
+        },
+        {
+          "to": "close-grip-pull-ups",
+          "type": "progression_of"
+        },
+        {
+          "to": "muscle-ups",
+          "type": "progression_of"
+        },
+        {
+          "to": "weighted-pull-up",
+          "type": "progression_of"
+        },
+        {
+          "to": "lat-pulldown",
+          "type": "regression_of"
+        },
+        {
+          "to": "scapular-pull-ups",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "rings"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "reverse-grip-lat-pulldown",
+      "name": "Reverse Grip Lat Pulldown",
+      "description": "A lat pulldown variation using an underhand grip that increases biceps involvement.",
+      "instructions": [
+        "Attach a straight bar to a lat pulldown machine.",
+        "Grip the bar with an underhand grip, shoulder-width apart.",
+        "Sit and secure your thighs under the pad.",
+        "Pull the bar down to your upper chest.",
+        "Squeeze your lats and biceps at the bottom.",
+        "Return the bar to the starting position with control.",
+        "Repeat for the desired number of reps."
+      ],
+      "tips": [
+        "Keep your chest up and avoid leaning back excessively.",
+        "Pull with your elbows, not just your hands.",
+        "Squeeze your lats at the bottom of the movement."
+      ],
+      "category": "strength",
+      "force_type": "pull",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "cable",
+      "body_part": "back",
+      "primary_muscles": [
+        "biceps_brachii",
+        "latissimus_dorsi"
+      ],
+      "secondary_muscles": [
+        "posterior_deltoid",
+        "rhomboids"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "lower_back_safe",
+        "knee_safe",
+        "no_axial_load",
+        "shoulder_safe"
+      ],
+      "variation_group": "pull-up",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "side-lying-lateral-raise",
+      "name": "Side-Lying Lateral Raise",
+      "description": "A dumbbell lateral deltoid isolation exercise performed lying on one side on a flat bench, providing constant tension and eliminating momentum from the standing position.",
+      "instructions": [
+        "Lie on your side on a flat bench with your bottom arm supporting your head or gripping the bench edge.",
+        "Hold a dumbbell in your top hand with your arm resting along your side.",
+        "Keeping your elbow slightly bent, raise the dumbbell upward until your arm is perpendicular to the floor.",
+        "Pause briefly at the top, then lower the dumbbell slowly back to your side.",
+        "Complete all reps on one side before switching."
+      ],
+      "tips": [
+        "Keep your torso still — only the working arm should move.",
+        "The lying position removes momentum and isolates the lateral deltoid effectively.",
+        "Use a lighter weight than your standing lateral raise — the leverage is more challenging."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "isolation",
+      "difficulty": "beginner",
+      "equipment": "dumbbell",
+      "body_part": "shoulders",
+      "primary_muscles": [
+        "lateral_deltoid"
+      ],
+      "secondary_muscles": [
+        "supraspinatus",
+        "trapezius"
+      ],
+      "goals": [
+        "hypertrophy"
+      ],
+      "tags": [
+        "shoulder_focus",
+        "push_day",
+        "requires_bench"
+      ],
+      "is_unilateral": true,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "lateral-raise",
+          "type": "alternative"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "cable"
+      ],
+      "synonyms": [
+        "side-lying lateral raise"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 5.0
+    },
+    {
+      "id": "smith-machine-front-squat",
+      "name": "Smith Machine Front Squat",
+      "description": "A squat on the Smith machine with the bar racked across the front of the shoulders, where the fixed path and the upright torso keep the work on the quads.",
+      "instructions": [
+        "Set the bar at upper-chest height and step under it so it rests across the front of your shoulders, against your collarbones.",
+        "Cross your arms over the bar or take an open front-rack grip, and drive your elbows up until your upper arms are close to parallel with the floor.",
+        "Unrack the bar and stand with your feet about shoulder-width apart and slightly forward of it.",
+        "Sit straight down, keeping your elbows high and your torso upright, until your thighs are at least parallel to the floor.",
+        "Drive through the middle of your feet to stand back up, and repeat for the desired number of repetitions."
+      ],
+      "tips": [
+        "High elbows are the whole exercise. As soon as they drop, the bar rolls off your shoulders onto your hands and the rack position collapses.",
+        "Set the safety stops just below your deepest squat position before you unrack anything -- on a front squat the fastest way out of a failed rep is to let the bar go.",
+        "Standing slightly ahead of the bar lets you keep your torso vertical. Under a fixed path, a stance directly beneath the bar forces you to lean and pushes the bar off the front rack."
+      ],
+      "category": "strength",
+      "force_type": "push",
+      "mechanic": "compound",
+      "difficulty": "beginner",
+      "equipment": "smith_machine",
+      "body_part": "upper_legs",
+      "primary_muscles": [
+        "gluteus_maximus",
+        "quadriceps"
+      ],
+      "secondary_muscles": [
+        "erector_spinae",
+        "gluteus_medius",
+        "hamstrings"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "leg_day"
+      ],
+      "variation_group": "squat",
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "front-squat",
+          "type": "alternative"
+        },
+        {
+          "to": "smith-machine-squat",
+          "type": "regression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "equipment_alternatives": [
+        "hack_squat"
+      ],
+      "synonyms": [
+        "smith machine front squat",
+        "smith front squat",
+        "front squat on smith machine",
+        "front rack smith squat",
+        "machine front squat",
+        "guided front squat"
+      ],
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    },
+    {
+      "id": "stability-ball-knee-tuck",
+      "name": "Stability Ball Knee Tuck",
+      "description": "A plank-position knee tuck with the feet on a stability ball, rolling the ball in under the hips to load the abs dynamically.",
+      "instructions": [
+        "Start in a high plank with both shins or the tops of the feet on top of a stability ball.",
+        "Hands are under the shoulders, body in a straight line.",
+        "Brace the core and pull the ball toward the chest by tucking the knees in.",
+        "Roll it back out by extending the legs fully back to the plank position.",
+        "Repeat for the recommended number of repetitions."
+      ],
+      "tips": [
+        "Hips do not pike up; keep a level trunk throughout the roll-in.",
+        "Shoulders stay over the wrists — don't let them drift forward."
+      ],
+      "category": "strength",
+      "force_type": "dynamic",
+      "mechanic": "compound",
+      "difficulty": "intermediate",
+      "equipment": "stability_ball",
+      "body_part": "core",
+      "primary_muscles": [
+        "rectus_abdominis"
+      ],
+      "secondary_muscles": [
+        "anterior_deltoid",
+        "hip_flexors",
+        "obliques",
+        "serratus_anterior"
+      ],
+      "goals": [
+        "hypertrophy",
+        "strength"
+      ],
+      "tags": [
+        "core"
+      ],
+      "is_unilateral": false,
+      "is_bodyweight": false,
+      "relations": [
+        {
+          "to": "ball-pike",
+          "type": "progression_of"
+        }
+      ],
+      "images": {
+        "classic": [
+          "start",
+          "peak"
+        ],
+        "flat": [
+          "start",
+          "peak"
+        ]
+      },
+      "animation": true,
+      "animation_type": "motion",
+      "met": 6.0
+    }
+  ],
+  "relation_targets": {
+    "battle-rope-double-slam": "Battle Rope Double Slam",
+    "rear-delt-fly": "Rear Delt Fly",
+    "heel-elevated-squat": "Heel-Elevated Squat",
+    "overhead-squat": "Overhead Squat",
+    "squat": "Barbell Back Squat",
+    "single-arm-db-row": "Single-Arm Dumbbell Row",
+    "lateral-raise": "Dumbbell Lateral Raise",
+    "single-arm-plate-loaded-lateral-raise": "Single-Arm Plate-Loaded Lateral Raise",
+    "behind-the-neck-pull-ups": "Behind-the-Neck Pull-Up",
+    "close-grip-pull-ups": "Close-Grip Pull-Ups",
+    "muscle-ups": "Muscle Ups",
+    "weighted-pull-up": "Weighted Pull-Up",
+    "lat-pulldown": "Lat Pulldown",
+    "scapular-pull-ups": "Scapular Pull Ups",
+    "smith-machine-squat": "Smith Machine Squat",
+    "ball-pike": "Ball Pike"
+  }
+}
