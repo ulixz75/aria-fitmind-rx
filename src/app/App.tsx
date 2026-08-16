@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
+import { InstallPrompt } from "../components/InstallPrompt";
 
 import { AuthPage } from "../features/auth/AuthPage";
 
@@ -867,12 +868,14 @@ export default function App() {
   if (!firebaseUser) {
     return (
       <Routes>
-        <Route
-          path="/auth"
-          element={
-            <AuthPage />
-          }
-        />
+       <Route
+  path="/auth"
+  element={
+    <InstallPrompt>
+      <AuthPage />
+    </InstallPrompt>
+  }
+/>
 
         <Route
           path="*"

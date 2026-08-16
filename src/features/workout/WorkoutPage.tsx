@@ -1594,17 +1594,19 @@ export function WorkoutPage() {
       </div>
 
       <section className="coach-console">
-        <div className="aria-orb giant">
-          {visualMode ? (
-            <Dumbbell
-              size={58}
-            />
-          ) : (
-            <Headphones
-              size={58}
-            />
-          )}
-        </div>
+       <div
+  className={`aria-orb giant ${
+    realtimeStatus === "connected"
+      ? "voice-active"
+      : ""
+  }`}
+>
+  {visualMode ? (
+    <Dumbbell size={58} />
+  ) : (
+    <Headphones size={58} />
+  )}
+</div>
 
         {/* =====================================================
             REALTIME STATE
