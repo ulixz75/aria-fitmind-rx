@@ -5,6 +5,7 @@ import {
   Clock3,
   Dumbbell,
   Headphones,
+  Mic2,
   Pause,
   Play,
   ShieldAlert,
@@ -14,6 +15,7 @@ import { Link } from "react-router-dom";
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -45,14 +47,27 @@ import type {
   ClientProfile,
 } from "../../types/models";
 
+import {
+  ARIA_MODEL,
+  createRealtimeSession,
+} from "../../services/realtimeCoach";
+
 import type {
   RealtimeCoachContext,
 } from "../../services/realtimeCoach";
 
 import {
-  ARIA_MODEL,
-  createRealtimeSession,
-} from "../../services/realtimeCoach";
+  connectRealtime,
+  disconnectRealtime,
+} from "../../services/realtimeClient";
+
+import type {
+  RealtimeClientSession,
+} from "../../services/realtimeClient";
+
+/* ============================================================
+   TYPES
+   ============================================================ */
 
 interface SessionExercise {
   programExercise: ProgramExercise;
@@ -64,15 +79,6 @@ interface SessionDay {
   exercises: SessionExercise[];
 }
 
-const DEFAULT_WORKOUT_DURATION_SECONDS =
-  30 * 60;
-
-const DEFAULT_ARIA_VOICE_DURATION_SECONDS =
-  10 * 60;
-
-const ARIA_WARNING_SECONDS =
-  5 * 60;
-
 type PageStatus =
   | "loading"
   | "ready"
@@ -82,43 +88,72 @@ type PageStatus =
   | "complete"
   | "error";
 
+type RealtimeStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
+
+/* ============================================================
+   TEMPORARY TEST VALUES
+   ------------------------------------------------------------
+   These will later come from the client's plan entitlement.
+   ============================================================ */
+
+const DEFAULT_WORKOUT_DURATION_SECONDS =
+  30 * 60;
+
+const DEFAULT_ARIA_VOICE_DURATION_SECONDS =
+  10 * 60;
+
+const ARIA_WARNING_SECONDS =
+  5 * 60;
+
+/* ============================================================
+   COMPONENT
+   ============================================================ */
+
 export function WorkoutPage() {
   const { firebaseUser } = useAuth();
 
-  const [status, setStatus] =
-    useState<PageStatus>(
-      "loading",
-    );
+  /* ==========================================================
+     GENERAL SESSION STATE
+     ========================================================== */
 
-  const [clientProfile, setClientProfile] =
-    useState<ClientProfile | null>(
-      null,
-    );
+  const [status, setStatus] =
+    useState<PageStatus>("loading");
+
+  const [error, setError] =
+    useState<string | null>(null);
 
   const [message, setMessage] =
     useState(
       "Preparing your training session…",
     );
 
+  /* ==========================================================
+     CLIENT / PROGRAM STATE
+     ========================================================== */
+
+  const [clientProfile, setClientProfile] =
+    useState<ClientProfile | null>(null);
+
   const [program, setProgram] =
-    useState<TrainingProgram | null>(
-      null,
-    );
+    useState<TrainingProgram | null>(null);
 
   const [sessionDay, setSessionDay] =
-    useState<SessionDay | null>(
-      null,
-    );
+    useState<SessionDay | null>(null);
+
+  /* ==========================================================
+     WORKOUT SESSION STATE
+     ========================================================== */
 
   const [session, setSession] =
-    useState<WorkoutSession | null>(
-      null,
-    );
+    useState<WorkoutSession | null>(null);
 
   const [sessionId, setSessionId] =
-    useState<string | null>(
-      null,
-    );
+    useState<string | null>(null);
 
   const [elapsedSeconds, setElapsedSeconds] =
     useState(0);
@@ -126,43 +161,39 @@ export function WorkoutPage() {
   const [ariaElapsedSeconds, setAriaElapsedSeconds] =
     useState(0);
 
-  const [
-    currentExerciseIndex,
-    setCurrentExerciseIndex,
-  ] = useState(0);
+  const [currentExerciseIndex, setCurrentExerciseIndex] =
+    useState(0);
 
-  const [
-    currentSetNumber,
-    setCurrentSetNumber,
-  ] = useState(1);
+  const [currentSetNumber, setCurrentSetNumber] =
+    useState(1);
 
-  const [
-    restRemainingSeconds,
-    setRestRemainingSeconds,
-  ] = useState(0);
+  const [restRemainingSeconds, setRestRemainingSeconds] =
+    useState(0);
 
-  const [
-    ariaWarningSent,
-    setAriaWarningSent,
-  ] = useState(false);
+  const [ariaWarningSent, setAriaWarningSent] =
+    useState(false);
 
-  const [
-    manualControlsOpen,
-    setManualControlsOpen,
-  ] = useState(false);
+  const [manualControlsOpen, setManualControlsOpen] =
+    useState(false);
 
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null,
-  );
+  /* ==========================================================
+     REALTIME STATE
+     ========================================================== */
 
-  /*
-   * ==========================================================
-   * LOAD ACTIVE PROGRAM + CLIENT PROFILE
-   * ==========================================================
-   */
+  const [realtimeStatus, setRealtimeStatus] =
+    useState<RealtimeStatus>("idle");
+
+  const [realtimeError, setRealtimeError] =
+    useState<string | null>(null);
+
+  const realtimeSessionRef =
+    useRef<RealtimeClientSession | null>(
+      null,
+    );
+
+  /* ==========================================================
+     LOAD ACTIVE PROGRAM + CLIENT PROFILE
+     ========================================================== */
 
   useEffect(() => {
     const uid = firebaseUser?.uid;
@@ -209,11 +240,8 @@ export function WorkoutPage() {
         ) {
           if (!cancelled) {
             setStatus("ready");
-
             setProgram(null);
-
             setSessionDay(null);
-
             setMessage(
               "No active training program is assigned to you yet.",
             );
@@ -237,11 +265,11 @@ export function WorkoutPage() {
          * Temporary behavior:
          * use the first scheduled day.
          *
-         * The session scheduler will replace this later.
+         * The real scheduler will replace
+         * this later.
          */
 
-        const selectedDay =
-          days[0];
+        const selectedDay = days[0];
 
         const exerciseViews =
           await getProgramDayExercises(
@@ -290,11 +318,24 @@ export function WorkoutPage() {
     };
   }, [firebaseUser?.uid]);
 
-  /*
-   * ==========================================================
-   * CURRENT EXERCISE
-   * ==========================================================
-   */
+  /* ==========================================================
+     CLEANUP REALTIME SESSION
+     ========================================================== */
+
+  useEffect(() => {
+    return () => {
+      disconnectRealtime(
+        realtimeSessionRef.current,
+      );
+
+      realtimeSessionRef.current =
+        null;
+    };
+  }, []);
+
+  /* ==========================================================
+     CURRENT EXERCISE
+     ========================================================== */
 
   const currentExercise =
     sessionDay?.exercises[
@@ -305,11 +346,9 @@ export function WorkoutPage() {
     currentExercise?.programExercise ??
     null;
 
-  /*
-   * ==========================================================
-   * FORMATTER
-   * ==========================================================
-   */
+  /* ==========================================================
+     TIME FORMATTER
+     ========================================================== */
 
   function formatTime(
     seconds: number,
@@ -369,11 +408,9 @@ export function WorkoutPage() {
     ariaElapsedSeconds >=
       DEFAULT_ARIA_VOICE_DURATION_SECONDS;
 
-  /*
-   * ==========================================================
-   * REALTIME CONTEXT
-   * ==========================================================
-   */
+  /* ==========================================================
+     REALTIME CONTEXT
+     ========================================================== */
 
   function buildRealtimeContext():
     RealtimeCoachContext | null {
@@ -441,11 +478,9 @@ export function WorkoutPage() {
     };
   }
 
-  /*
-   * ==========================================================
-   * WORKOUT TIMER
-   * ==========================================================
-   */
+  /* ==========================================================
+     WORKOUT TIMER
+     ========================================================== */
 
   useEffect(() => {
     if (
@@ -478,15 +513,11 @@ export function WorkoutPage() {
           );
 
           setAriaElapsedSeconds(
-            (current) => {
-              const next =
-                current + 1;
-
-              return Math.min(
-                next,
+            (current) =>
+              Math.min(
+                current + 1,
                 DEFAULT_ARIA_VOICE_DURATION_SECONDS,
-              );
-            },
+              ),
           );
 
           setRestRemainingSeconds(
@@ -506,11 +537,9 @@ export function WorkoutPage() {
       );
   }, [status]);
 
-  /*
-   * ==========================================================
-   * ARIA VOICE WINDOW
-   * ==========================================================
-   */
+  /* ==========================================================
+     ARIA VOICE WINDOW
+     ========================================================== */
 
   useEffect(() => {
     if (
@@ -526,11 +555,6 @@ export function WorkoutPage() {
       setAriaWarningSent(
         true,
       );
-
-      /*
-       * GPT Realtime will later receive
-       * this event and speak the 5-minute warning.
-       */
 
       console.info(
         "ARIA 5-minute warning threshold reached.",
@@ -553,6 +577,22 @@ export function WorkoutPage() {
                   DEFAULT_ARIA_VOICE_DURATION_SECONDS,
               }
             : current,
+      );
+
+      /*
+       * Voice session ends here.
+       * Workout continues visually.
+       */
+
+      disconnectRealtime(
+        realtimeSessionRef.current,
+      );
+
+      realtimeSessionRef.current =
+        null;
+
+      setRealtimeStatus(
+        "disconnected",
       );
 
       void updateWorkoutSession(
@@ -580,11 +620,9 @@ export function WorkoutPage() {
     sessionId,
   ]);
 
-  /*
-   * ==========================================================
-   * COMPLETE SESSION
-   * ==========================================================
-   */
+  /* ==========================================================
+     COMPLETE SESSION
+     ========================================================== */
 
   useEffect(() => {
     if (
@@ -594,28 +632,153 @@ export function WorkoutPage() {
       return;
     }
 
+    disconnectRealtime(
+      realtimeSessionRef.current,
+    );
+
+    realtimeSessionRef.current =
+      null;
+
+    setRealtimeStatus(
+      "disconnected",
+    );
+
     void completeWorkoutSession(
       sessionId,
     ).catch(
-      (
-        completeError,
-      ) => {
+      (completeError) => {
         console.error(
           "Failed to complete workout session:",
           completeError,
         );
       },
     );
-  }, [
-    status,
-    sessionId,
-  ]);
+  }, [status, sessionId]);
 
-  /*
-   * ==========================================================
-   * START SESSION
-   * ==========================================================
-   */
+  /* ==========================================================
+     CONNECT ARIA REALTIME
+     ========================================================== */
+
+  async function connectAriaRealtime(
+    realtimeContext: RealtimeCoachContext,
+  ) {
+    if (!firebaseUser) {
+      throw new Error(
+        "Authenticated Firebase user is unavailable.",
+      );
+    }
+
+    setRealtimeStatus(
+      "connecting",
+    );
+
+    setRealtimeError(null);
+
+    /*
+     * First ask our secure backend for an
+     * ephemeral OpenAI Realtime credential.
+     */
+
+    const realtimeSession =
+      await createRealtimeSession(
+        firebaseUser,
+        realtimeContext,
+      );
+
+    console.info(
+      "ARIA Realtime secure session created.",
+      {
+        expiresAt:
+          realtimeSession.expiresAt,
+      },
+    );
+
+    /*
+     * Then establish WebRTC.
+     *
+     * This is the point at which the browser
+     * requests microphone permission.
+     */
+
+    const realtimeConnection =
+      await connectRealtime({
+        clientSecret:
+          realtimeSession.clientSecret,
+
+        onConnectionStateChange:
+          (
+            connectionState,
+          ) => {
+            console.info(
+              "ARIA WebRTC connection:",
+              connectionState,
+            );
+
+            if (
+              connectionState ===
+                "connected"
+            ) {
+              setRealtimeStatus(
+                "connected",
+              );
+
+              setRealtimeError(
+                null,
+              );
+
+              setMessage(
+                "ARIA is connected. Put on your headphones.",
+              );
+
+              return;
+            }
+
+            if (
+              connectionState ===
+                "disconnected" ||
+              connectionState ===
+                "closed" ||
+              connectionState ===
+                "failed"
+            ) {
+              setRealtimeStatus(
+                "disconnected",
+              );
+            }
+          },
+
+        onEvent: (event) => {
+          /*
+           * We are intentionally logging Realtime
+           * events for this first audio test.
+           *
+           * Function calls and structured handling
+           * will be added in the next phase.
+           */
+
+          if (
+            event.type
+          ) {
+            console.info(
+              "ARIA Realtime event:",
+              event.type,
+              event,
+            );
+          }
+        },
+      });
+
+    realtimeSessionRef.current =
+      realtimeConnection;
+
+    setRealtimeStatus(
+      "connected",
+    );
+  }
+
+  /* ==========================================================
+     START WORKOUT + ARIA
+     ========================================================== */
 
   async function startSession() {
     const uid =
@@ -645,13 +808,27 @@ export function WorkoutPage() {
       return;
     }
 
+    /*
+     * Reset temporary voice state.
+     */
+
+    setRealtimeStatus(
+      "connecting",
+    );
+
+    setRealtimeError(null);
+
     setStatus("starting");
 
     setMessage(
-      "Starting your workout session…",
+      "Preparing your ARIA voice session…",
     );
 
     try {
+      /*
+       * 1. Create persistent workout session.
+       */
+
       const workoutSession: Omit<
         WorkoutSession,
         "id" | "createdAt" | "updatedAt"
@@ -732,60 +909,145 @@ export function WorkoutPage() {
         false,
       );
 
-      setStatus("active");
+      /*
+       * 2. Build trusted session context.
+       *
+       * At session start we explicitly use the
+       * known initial timer values rather than relying
+       * on React state updates having completed.
+       */
 
-      setMessage(
-        "Your workout is active.",
+      const realtimeContext:
+        RealtimeCoachContext = {
+        preferredLanguage:
+          clientProfile?.preferredLanguage ??
+          "auto",
+
+        clientName:
+          clientProfile?.displayName ??
+          firebaseUser.displayName ??
+          "Client",
+
+        fitnessLevel:
+          clientProfile?.fitnessLevel,
+
+        primaryGoals:
+          clientProfile?.primaryGoals ??
+          [],
+
+        programName:
+          program.name,
+
+        dayName:
+          sessionDay.day.name,
+
+        currentExercise:
+          currentExercise.exercise
+            ?.name ??
+          "Current exercise",
+
+        currentSet: 1,
+
+        totalSets:
+          currentConfig?.sets ??
+          0,
+
+        targetReps:
+          currentConfig?.reps,
+
+        targetDurationSeconds:
+          currentConfig?.durationSeconds,
+
+        restSeconds:
+          currentConfig?.restSeconds ??
+          0,
+
+        ariaRemainingSeconds:
+          DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+
+        workoutRemainingSeconds:
+          DEFAULT_WORKOUT_DURATION_SECONDS,
+
+        mode: "voice",
+      };
+
+      console.info(
+        "ARIA realtime context:",
+        realtimeContext,
       );
 
       /*
-       * Build the exact context that will later
-       * be sent to the secure Realtime endpoint.
+       * 3. Authenticate + connect Realtime.
        *
-       * We intentionally do not call OpenAI yet.
+       * connectRealtime() will request microphone
+       * permission at this point.
        */
 
-      const realtimeContext =
-  buildRealtimeContext();
+      setStatus("active");
 
-if (!realtimeContext) {
-  throw new Error(
-    "Unable to build ARIA realtime context.",
-  );
-}
+      setMessage(
+        "Connecting ARIA…",
+      );
 
-try {
-  const realtimeSession =
-    await createRealtimeSession(
-      firebaseUser,
-      realtimeContext,
-    );
+      try {
+        await connectAriaRealtime(
+          realtimeContext,
+        );
+      } catch (
+        realtimeErrorValue
+      ) {
+        console.error(
+          "ARIA voice connection failed:",
+          realtimeErrorValue,
+        );
 
-  console.info(
-    "ARIA Realtime secure session created.",
-    {
-      expiresAt:
-        realtimeSession.expiresAt,
-    },
-  );
-} catch (realtimeError) {
-  console.error(
-    "ARIA Realtime session creation failed:",
-    realtimeError,
-  );
+        setRealtimeStatus(
+          "error",
+        );
 
-  setMessage(
-    realtimeError instanceof Error
-      ? realtimeError.message
-      : "ARIA voice session could not be prepared.",
-  );
-}
+        const friendlyMessage =
+          realtimeErrorValue instanceof
+          DOMException
+            ? realtimeErrorValue.name ===
+              "NotAllowedError"
+              ? "Microphone permission was denied. You can continue using visual mode."
+              : realtimeErrorValue.message
+            : realtimeErrorValue instanceof
+                Error
+              ? realtimeErrorValue.message
+              : "ARIA voice connection could not be established.";
+
+        setRealtimeError(
+          friendlyMessage,
+        );
+
+        /*
+         * The workout session remains active.
+         * This is intentional: the user can still
+         * continue visually or retry later.
+         */
+
+        setMessage(
+          "Workout active. ARIA voice could not connect.",
+        );
+      }
     } catch (
       startError
     ) {
       console.error(
         "Failed to start workout session:",
         startError,
+      );
+
+      disconnectRealtime(
+        realtimeSessionRef.current,
+      );
+
+      realtimeSessionRef.current =
+        null;
+
+      setRealtimeStatus(
+        "error",
       );
 
       setStatus("error");
@@ -798,11 +1060,9 @@ try {
     }
   }
 
-  /*
-   * ==========================================================
-   * PAUSE / RESUME
-   * ==========================================================
-   */
+  /* ==========================================================
+     PAUSE / RESUME
+     ========================================================== */
 
   async function togglePause() {
     if (!sessionId) {
@@ -846,11 +1106,13 @@ try {
     }
   }
 
-  /*
-   * ==========================================================
-   * COMPLETE SET
-   * ==========================================================
-   */
+  /* ==========================================================
+     COMPLETE CURRENT SET
+     ----------------------------------------------------------
+     Manual fallback for now.
+     GPT function calls will eventually call the
+     same session-state logic.
+     ========================================================== */
 
   async function completeCurrentSet() {
     if (
@@ -930,13 +1192,22 @@ try {
     );
   }
 
-  /*
-   * ==========================================================
-   * FINISH WORKOUT
-   * ==========================================================
-   */
+  /* ==========================================================
+     FINISH WORKOUT
+     ========================================================== */
 
   async function finishWorkout() {
+    disconnectRealtime(
+      realtimeSessionRef.current,
+    );
+
+    realtimeSessionRef.current =
+      null;
+
+    setRealtimeStatus(
+      "disconnected",
+    );
+
     if (!sessionId) {
       setStatus("complete");
       return;
@@ -968,11 +1239,9 @@ try {
     }
   }
 
-  /*
-   * ==========================================================
-   * ERROR SCREEN
-   * ==========================================================
-   */
+  /* ==========================================================
+     ERROR SCREEN
+     ========================================================== */
 
   if (
     status === "error"
@@ -1022,11 +1291,9 @@ try {
     );
   }
 
-  /*
-   * ==========================================================
-   * COMPLETE SCREEN
-   * ==========================================================
-   */
+  /* ==========================================================
+     COMPLETE SCREEN
+     ========================================================== */
 
   if (
     status === "complete"
@@ -1053,8 +1320,9 @@ try {
           </h1>
 
           <p className="muted">
-            You completed your workout.
-            ARIA is proud of you.
+            You completed your
+            workout. ARIA is proud
+            of you.
           </p>
         </div>
 
@@ -1099,11 +1367,9 @@ try {
     );
   }
 
-  /*
-   * ==========================================================
-   * READY SCREEN
-   * ==========================================================
-   */
+  /* ==========================================================
+     READY SCREEN
+     ========================================================== */
 
   if (
     status === "loading" ||
@@ -1128,7 +1394,8 @@ try {
           </span>
 
           <h1>
-            Put on your headphones.
+            Put on your
+            headphones.
           </h1>
 
           <p className="muted">
@@ -1136,7 +1403,7 @@ try {
               ? "Preparing your workout…"
               : status ===
                   "starting"
-                ? "Starting your workout…"
+                ? "Preparing ARIA and your microphone…"
                 : "Your session is ready."}
           </p>
         </div>
@@ -1192,12 +1459,24 @@ try {
             </div>
           )}
 
-          <div className="connection-state ready">
+          <div
+            className={`connection-state ${
+              realtimeStatus ===
+              "error"
+                ? "danger"
+                : "ready"
+            }`}
+          >
             <span className="state-dot" />
-            READY
+
+            {realtimeStatus ===
+            "error"
+              ? "VOICE NOT READY"
+              : "READY"}
           </div>
 
           <button
+            type="button"
             className="primary-button center-button"
             onClick={() =>
               void startSession()
@@ -1210,7 +1489,7 @@ try {
               !sessionDay
             }
           >
-            <Play
+            <Mic2
               size={18}
             />
 
@@ -1226,9 +1505,12 @@ try {
             </div>
 
             <p>
-              Your voice coach will
-              guide the session while
-              you train hands-free.
+              Put on your headphones
+              and allow microphone
+              access when prompted.
+              After that, ARIA will
+              coach the session
+              hands-free.
             </p>
 
             <p
@@ -1237,13 +1519,24 @@ try {
                 fontSize: "10px",
               }}
             >
-              Model: {ARIA_MODEL}
-              <br />
-              Your personalized coaching
-              instructions will be applied
-              when ARIA voice coaching
-              starts.
+              Model:{" "}
+              {ARIA_MODEL}
             </p>
+
+            {realtimeError && (
+              <p
+                style={{
+                  marginTop:
+                    "10px",
+                  color:
+                    "#ff9b9b",
+                  fontSize:
+                    "11px",
+                }}
+              >
+                {realtimeError}
+              </p>
+            )}
           </div>
 
           <div className="safety-note">
@@ -1252,10 +1545,11 @@ try {
             />
 
             <span>
-              ARIA is a fitness coach,
-              not a medical professional.
-              Stop for significant pain
-              or serious symptoms.
+              ARIA is a fitness
+              coach, not a medical
+              professional. Stop for
+              significant pain or
+              serious symptoms.
             </span>
           </div>
         </section>
@@ -1263,11 +1557,9 @@ try {
     );
   }
 
-  /*
-   * ==========================================================
-   * ACTIVE / PAUSED
-   * ==========================================================
-   */
+  /* ==========================================================
+     ACTIVE / PAUSED
+     ========================================================== */
 
   return (
     <div className="workout-page">
@@ -1289,8 +1581,8 @@ try {
         </span>
 
         <h1>
-          {currentExercise?.exercise
-            ?.name ??
+          {currentExercise
+            ?.exercise?.name ??
             "Workout"}
         </h1>
 
@@ -1314,6 +1606,41 @@ try {
           )}
         </div>
 
+        {/* =====================================================
+            REALTIME STATE
+            ===================================================== */}
+
+        <div
+          className={`connection-state ${
+            realtimeStatus ===
+            "connected"
+              ? "active"
+              : realtimeStatus ===
+                    "error"
+                ? "danger"
+                : "ready"
+          }`}
+        >
+          <span className="state-dot" />
+
+          {visualMode
+            ? "VISUAL MODE"
+            : realtimeStatus ===
+                "connected"
+              ? "ARIA CONNECTED"
+              : realtimeStatus ===
+                    "connecting"
+                ? "CONNECTING ARIA"
+                : status ===
+                      "paused"
+                  ? "PAUSED"
+                  : "ARIA ACTIVE"}
+        </div>
+
+        {/* =====================================================
+            TIMERS
+            ===================================================== */}
+
         <div
           style={{
             display: "grid",
@@ -1330,7 +1657,8 @@ try {
             />
 
             <span>
-              Workout remaining
+              Workout
+              remaining
             </span>
 
             <strong>
@@ -1359,21 +1687,32 @@ try {
           </div>
         </div>
 
-        <div
-          className={`connection-state ${
-            visualMode
-              ? "ready"
-              : "active"
-          }`}
-        >
-          <span className="state-dot" />
+        {/* =====================================================
+            WARNINGS / MESSAGES
+            ===================================================== */}
 
-          {visualMode
-            ? "VISUAL MODE"
-            : status === "paused"
-              ? "PAUSED"
-              : "ARIA ACTIVE"}
-        </div>
+        {realtimeStatus ===
+          "connected" &&
+          voiceMode && (
+            <div
+              className="notice"
+              style={{
+                display: "flex",
+                alignItems:
+                  "center",
+                justifyContent:
+                  "center",
+                gap: "8px",
+              }}
+            >
+              <Mic2
+                size={15}
+              />
+              ARIA is listening.
+              Keep your phone down
+              and train.
+            </div>
+          )}
 
         {ariaWarningSent &&
           !visualMode && (
@@ -1392,6 +1731,22 @@ try {
           </div>
         )}
 
+        {realtimeError && (
+          <div
+            className="notice"
+            style={{
+              color:
+                "#ffb1b1",
+            }}
+          >
+            {realtimeError}
+          </div>
+        )}
+
+        {/* =====================================================
+            CURRENT EXERCISE
+            ===================================================== */}
+
         {currentExercise && (
           <section
             className="section-card"
@@ -1405,20 +1760,14 @@ try {
               {currentExerciseIndex +
                 1}{" "}
               of{" "}
-              {
-                sessionDay
-                  ?.exercises
-                  .length
-              }
+              {sessionDay?.exercises
+                .length ?? 0}
             </span>
 
             <h2>
-              {
-                currentExercise
-                  .exercise
-                  ?.name ??
-                "Exercise"
-              }
+              {currentExercise
+                .exercise?.name ??
+                "Exercise"}
             </h2>
 
             <div
@@ -1439,7 +1788,8 @@ try {
                 }
               </span>
 
-              {currentConfig?.reps !==
+              {currentConfig
+                ?.reps !==
                 undefined && (
                 <span>
                   {
@@ -1449,7 +1799,8 @@ try {
                 </span>
               )}
 
-              {currentConfig?.durationSeconds !==
+              {currentConfig
+                ?.durationSeconds !==
                 undefined && (
                 <span>
                   {
@@ -1510,6 +1861,10 @@ try {
               </div>
             )}
 
+            {/* =================================================
+                VOICE MODE
+                ================================================= */}
+
             {voiceMode && (
               <div
                 style={{
@@ -1541,8 +1896,10 @@ try {
                       "13px",
                   }}
                 >
-                  ARIA is coaching
-                  you
+                  {realtimeStatus ===
+                  "connected"
+                    ? "ARIA is coaching you"
+                    : "ARIA voice is unavailable"}
                 </strong>
 
                 <span
@@ -1557,12 +1914,17 @@ try {
                       "11px",
                   }}
                 >
-                  Keep training. Your
-                  voice coach will handle
-                  the session flow.
+                  {realtimeStatus ===
+                  "connected"
+                    ? "Keep training. You do not need to watch the phone."
+                    : "You can continue using the manual controls while we troubleshoot voice."}
                 </span>
               </div>
             )}
+
+            {/* =================================================
+                VISUAL MODE
+                ================================================= */}
 
             {visualMode && (
               <button
@@ -1593,6 +1955,10 @@ try {
             )}
           </section>
         )}
+
+        {/* =====================================================
+            MANUAL FALLBACK CONTROLS
+            ===================================================== */}
 
         <div
           style={{
@@ -1697,6 +2063,10 @@ try {
           )}
         </div>
 
+        {/* =====================================================
+            SAFETY
+            ===================================================== */}
+
         <div className="safety-note">
           <ShieldAlert
             size={18}
@@ -1704,8 +2074,8 @@ try {
 
           <span>
             Stop the workout if you
-            experience significant pain
-            or serious symptoms.
+            experience significant
+            pain or serious symptoms.
           </span>
         </div>
       </section>
