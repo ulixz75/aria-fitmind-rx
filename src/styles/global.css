@@ -1616,3 +1616,104 @@ textarea:focus {
     );
   }
 }
+/* ============================================================
+   ADMIN PROGRAMS — RESPONSIVE CARDS
+   ============================================================ */
+
+.program-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.program-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.program-card h2,
+.program-card p,
+.program-card span,
+.program-card strong {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.program-card h2 {
+  line-height: 1.2;
+}
+
+.program-card p {
+  line-height: 1.5;
+}
+
+.program-card .exercise-meta {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.program-card .exercise-meta span {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.program-card .program-id {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.program-card > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 960px) {
+  .program-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .program-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .program-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .program-card h2 {
+    font-size: 20px;
+  }
+
+  .program-card p {
+    font-size: 12px;
+  }
+
+  .program-card .program-id {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .program-card .program-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .program-card .program-actions > * {
+    max-width: 100%;
+  }
+}

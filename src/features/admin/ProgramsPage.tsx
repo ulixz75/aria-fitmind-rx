@@ -790,18 +790,11 @@ export function ProgramsPage() {
           </div>
         </section>
       ) : (
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(3, minmax(0, 1fr))",
-            gap: "16px",
-          }}
-        >
+        <section className="program-grid">
           {programs.map(
             (program) => (
               <article
-                className="section-card"
+                className="section-card program-card"
                 key={program.id}
               >
                 <span className="eyebrow">
