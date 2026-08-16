@@ -1,8 +1,7 @@
 import {
   Download,
-  Globe2,
   Monitor,
-  Plus,
+  Globe2,
   Share2,
   Smartphone,
   X,
@@ -365,45 +364,45 @@ export function InstallPrompt({
             workout experience.
           </p>
 
-          <div className="install-platforms">
-            <div className="install-platform">
-              <Smartphone
-                size={17}
-              />
+        <div className="install-platforms">
+  <div className="install-platform">
+    <Smartphone
+      size={17}
+    />
 
-              <span>
-                Android
-              </span>
-            </div>
+    <span>
+      Android
+    </span>
+  </div>
 
-            <div className="install-platform">
-              {ios ? (
-                <Share2
-                  size={17}
-                />
-              ) : (
-                <Monitor
-                  size={17}
-                />
-              )}
+  <div className="install-platform">
+    {ios ? (
+      <Share2
+        size={17}
+      />
+    ) : (
+      <Monitor
+        size={17}
+      />
+    )}
 
-              <span>
-                {ios
-                  ? "iPhone / iPad"
-                  : "Desktop"}
-              </span>
-            </div>
+    <span>
+      {ios
+        ? "iPhone / iPad"
+        : "Desktop"}
+    </span>
+  </div>
 
-            <div className="install-platform">
-              <Globe2
-                size={17}
-              />
+  <div className="install-platform">
+    <Globe2
+      size={17}
+    />
 
-              <span>
-                Web app
-              </span>
-            </div>
-          </div>
+    <span>
+      Web app
+    </span>
+  </div>
+</div>
 
           {ios ? (
             <div className="install-ios-guide">

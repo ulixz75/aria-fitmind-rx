@@ -1955,6 +1955,29 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.install-platform-detected {
+  width: max-content;
+  max-width: 100%;
+  margin: 20px auto 0;
+  min-height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(124, 247, 212, 0.16);
+  border-radius: 999px;
+  background: rgba(124, 247, 212, 0.06);
+  color: #bdfdf0;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.install-platform-detected svg {
+  color: #7cf7d4;
+  flex: 0 0 auto;
+}
+
 @keyframes installFadeIn {
   from {
     opacity: 0;
