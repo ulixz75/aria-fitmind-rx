@@ -10,9 +10,23 @@ export interface RealtimeEvent {
   [key: string]: unknown;
 }
 
+export interface RealtimeFunctionCall {
+  callId: string;
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
 export interface ConnectRealtimeOptions {
   clientSecret: string;
-  onEvent?: (event: RealtimeEvent) => void;
+
+  onEvent?: (
+    event: RealtimeEvent,
+  ) => void;
+
+  onFunctionCall?: (
+    functionCall: RealtimeFunctionCall,
+  ) => void;
+
   onConnectionStateChange?: (
     state: RTCPeerConnectionState,
   ) => void;
@@ -24,6 +38,7 @@ export async function connectRealtime(
   const {
     clientSecret,
     onEvent,
+    onFunctionCall,
     onConnectionStateChange,
   } = options;
 
@@ -68,18 +83,22 @@ export async function connectRealtime(
     document.createElement("audio");
 
   audioElement.autoplay = true;
+
   audioElement.setAttribute(
     "playsinline",
     "true",
   );
 
-  audioElement.style.display = "none";
+  audioElement.style.display =
+    "none";
 
   document.body.appendChild(
     audioElement,
   );
 
-  peerConnection.ontrack = (event) => {
+  peerConnection.ontrack = (
+    event,
+  ) => {
     const [remoteStream] =
       event.streams;
 
@@ -139,13 +158,6 @@ export async function connectRealtime(
    * ----------------------------------------------------------
    * 4. Realtime data channel
    * ----------------------------------------------------------
-   *
-   * This is where we will later send/receive:
-   *
-   * - function calls
-   * - session events
-   * - transcripts
-   * - control events
    */
 
   const dataChannel =
@@ -181,14 +193,108 @@ export async function connectRealtime(
     },
   );
 
+  /*
+   * ----------------------------------------------------------
+   * 5. Receive Realtime events
+   * ----------------------------------------------------------
+   */
+
   dataChannel.addEventListener(
     "message",
     (event) => {
       try {
         const parsed =
-          JSON.parse(event.data);
+          JSON.parse(
+            event.data,
+          ) as RealtimeEvent;
 
+        /*
+         * Always expose the raw
+         * event to the caller.
+         */
         onEvent?.(parsed);
+
+        /*
+         * ----------------------------------------------------
+         * Function calling
+         * ----------------------------------------------------
+         *
+         * OpenAI Realtime may emit:
+         *
+         * response.function_call_arguments.done
+         *
+         * containing:
+         *
+         * - call_id
+         * - name
+         * - arguments
+         *
+         * We convert that into a
+         * simpler application-level object.
+         */
+
+        if (
+          parsed.type ===
+          "response.function_call_arguments.done"
+        ) {
+          const callId =
+            typeof parsed.call_id ===
+            "string"
+              ? parsed.call_id
+              : "";
+
+          const name =
+            typeof parsed.name ===
+            "string"
+              ? parsed.name
+              : "";
+
+          let args: Record<
+            string,
+            unknown
+          > = {};
+
+          if (
+            typeof parsed.arguments ===
+            "string"
+          ) {
+            try {
+              const parsedArguments =
+                JSON.parse(
+                  parsed.arguments,
+                );
+
+              if (
+                parsedArguments &&
+                typeof parsedArguments ===
+                  "object"
+              ) {
+                args =
+                  parsedArguments as Record<
+                    string,
+                    unknown
+                  >;
+              }
+            } catch (argumentError) {
+              console.warn(
+                "Unable to parse ARIA function arguments:",
+                argumentError,
+                parsed.arguments,
+              );
+            }
+          }
+
+          if (
+            callId &&
+            name
+          ) {
+            onFunctionCall?.({
+              callId,
+              name,
+              arguments: args,
+            });
+          }
+        }
       } catch (error) {
         console.warn(
           "Unable to parse ARIA Realtime event:",
@@ -201,7 +307,7 @@ export async function connectRealtime(
 
   /*
    * ----------------------------------------------------------
-   * 5. Create SDP offer
+   * 6. Create SDP offer
    * ----------------------------------------------------------
    */
 
@@ -227,7 +333,7 @@ export async function connectRealtime(
 
   /*
    * ----------------------------------------------------------
-   * 6. Send SDP offer to OpenAI Realtime
+   * 7. Send SDP offer to OpenAI Realtime
    * ----------------------------------------------------------
    */
 
@@ -270,7 +376,8 @@ export async function connectRealtime(
   }
 
   /*
-   * OpenAI returns the SDP answer as text.
+   * OpenAI returns the SDP answer
+   * as text.
    */
 
   const answerSdp =
@@ -330,6 +437,62 @@ export function sendRealtimeEvent(
 }
 
 /* ============================================================
+   SEND FUNCTION CALL RESULT
+   ============================================================ */
+
+export function sendRealtimeFunctionResult(
+  dataChannel: RTCDataChannel,
+  callId: string,
+  output: unknown,
+): void {
+  if (
+    dataChannel.readyState !==
+    "open"
+  ) {
+    throw new Error(
+      "ARIA Realtime data channel is not open.",
+    );
+  }
+
+  const serializedOutput =
+    typeof output === "string"
+      ? output
+      : JSON.stringify(output);
+
+  /*
+   * Send the function result
+   * back to the Realtime model.
+   */
+
+  dataChannel.send(
+    JSON.stringify({
+      type: "conversation.item.create",
+
+      item: {
+        type: "function_call_output",
+
+        call_id: callId,
+
+        output:
+          serializedOutput,
+      },
+    }),
+  );
+
+  /*
+   * Ask the model to continue
+   * the response after receiving
+   * the function result.
+   */
+
+  dataChannel.send(
+    JSON.stringify({
+      type: "response.create",
+    }),
+  );
+}
+
+/* ============================================================
    DISCONNECT REALTIME SESSION
    ============================================================ */
 
@@ -358,6 +521,7 @@ export function disconnectRealtime(
   session.peerConnection.close();
 
   session.audioElement.pause();
+
   session.audioElement.srcObject =
     null;
 

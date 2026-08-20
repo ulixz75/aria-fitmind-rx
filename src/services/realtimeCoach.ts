@@ -7,8 +7,7 @@ import type { User } from "firebase/auth";
  * The browser only receives an ephemeral Realtime credential.
  */
 
-export const ARIA_MODEL =
-  "gpt-realtime-2.1-mini";
+export const ARIA_MODEL = "gpt-realtime-2.1-mini";
 
 export type AriaLanguage =
   | "es"
@@ -30,6 +29,10 @@ export interface RealtimeCoachContext {
 
   currentExercise: string;
 
+  currentExerciseIndex: number;
+
+  totalExercises: number;
+
   currentSet: number;
 
   totalSets: number;
@@ -46,6 +49,84 @@ export interface RealtimeCoachContext {
 
   mode: "voice" | "visual";
 }
+
+/* ============================================================
+   ARIA REALTIME TOOLS
+   ============================================================ */
+
+export const ARIA_REALTIME_TOOLS = [
+  {
+    type: "function",
+    name: "complete_set",
+    description:
+      "Marks the current workout set as completed. Use this when the client clearly indicates that they finished the current set. Never claim the set was recorded before the application confirms the action.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+
+  {
+    type: "function",
+    name: "get_workout_state",
+    description:
+      "Returns the current authoritative workout state from the application. Use this when the client asks which exercise or set they are doing, how many sets remain, or what the current workout state is.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+
+  {
+    type: "function",
+    name: "get_next_exercise",
+    description:
+      "Returns the next exercise configured in the current workout program. Use this when the client asks what exercise comes next.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+
+  {
+    type: "function",
+    name: "pause_workout",
+    description:
+      "Pauses the current workout when the client explicitly asks to pause.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+
+  {
+    type: "function",
+    name: "resume_workout",
+    description:
+      "Resumes the current workout when the client explicitly asks to continue or resume.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+
+  {
+    type: "function",
+    name: "skip_rest",
+    description:
+      "Ends the current rest period when the client explicitly says they want to skip or finish the rest.",
+    parameters: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+] as const;
 
 /* ============================================================
    LANGUAGE
@@ -111,7 +192,7 @@ VOICE STYLE:
 - Never overwhelm the client with unnecessary explanations.
 
 WORKOUT STATE:
-- The application is the source of truth for workout state.
+- The application is the absolute source of truth for workout state.
 - Never invent workout data.
 - Never invent previous weights, reps, records, personal history or client facts.
 - Never invent the current exercise or set.
@@ -119,7 +200,7 @@ WORKOUT STATE:
 - Never claim that an action was recorded unless the application confirms it.
 
 EXERCISE COACHING:
-- Know the current exercise, current set, target reps or duration, rest period and workout goal from the context supplied by the application.
+- Know the current exercise, current set, target reps or duration, rest period and workout goal from the application context.
 - During active sets, use very short coaching cues.
 - During rest, give concise guidance and useful check-ins.
 - Focus on technique, pacing, breathing and controlled execution.
@@ -136,9 +217,26 @@ SET COMPLETION:
   "that's it"
   "next"
   "siguiente"
-- When the client indicates that a set is complete, request the application's set-completion action.
-- Never say that a set has been recorded until the application confirms it.
-- After confirmation, guide the client into the appropriate rest or next set.
+- When the client indicates that the current set is complete, immediately call complete_set.
+- Do not ask the client to press a button or register the set manually.
+- Never say that a set has been recorded until complete_set returns a successful result.
+- After successful confirmation, guide the client into the appropriate rest or next set.
+
+WORKOUT QUESTIONS:
+- If the client asks which set they are on, how many sets remain, what exercise they are doing, or similar workout-state questions, call get_workout_state.
+- If the client asks what exercise comes next, call get_next_exercise.
+- Do not answer these questions from memory when the application can provide the authoritative state.
+
+REST:
+- The application controls rest timing.
+- When a set is completed and the application starts a rest period, acknowledge the rest naturally.
+- If the client explicitly wants to skip the rest, call skip_rest.
+- Never invent rest duration.
+
+PAUSE AND RESUME:
+- If the client explicitly asks to pause, call pause_workout.
+- If the client explicitly asks to continue or resume, call resume_workout.
+- Do not pause or resume merely because the client asks a question.
 
 EXERCISE CHANGES:
 - If an exercise is too difficult or uncomfortable, respond conservatively.
@@ -180,9 +278,10 @@ CONVERSATION:
 - Keep the workout moving.
 
 FUNCTION USE:
-- Use application functions to change workout state.
+- Use application functions to change or query workout state.
 - Never simulate a function result.
 - Wait for the application result before confirming that an action occurred.
+- When a function is available for an action, prefer the function instead of telling the client to use the application manually.
 `;
 }
 
@@ -232,6 +331,9 @@ ${context.dayName}
 CURRENT EXERCISE:
 ${context.currentExercise}
 
+CURRENT EXERCISE POSITION:
+Exercise ${context.currentExerciseIndex + 1} of ${context.totalExercises}
+
 CURRENT SET:
 ${context.currentSet} of ${context.totalSets}
 
@@ -252,6 +354,10 @@ ${context.mode}
 
 The application controls all timing and workout state.
 Use this context only as a factual description of the current session.
+
+If the client asks about the next exercise, use get_next_exercise.
+If the client says the current set is finished, use complete_set.
+If the client asks about the current workout state, use get_workout_state.
 `;
 }
 
@@ -297,6 +403,8 @@ export async function createRealtimeSession(
           buildAriaSessionContext(
             context,
           ),
+
+        tools: ARIA_REALTIME_TOOLS,
       }),
     },
   );

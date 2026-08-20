@@ -60,6 +60,7 @@ import type {
 import {
   connectRealtime,
   disconnectRealtime,
+  sendRealtimeFunctionResult,
 } from "../../services/realtimeClient";
 
 import type {
@@ -464,10 +465,15 @@ export function WorkoutPage() {
       dayName:
         sessionDay.day.name,
 
-      currentExercise:
+            currentExercise:
         currentExercise.exercise
           ?.name ??
         "Current exercise",
+
+      currentExerciseIndex,
+
+      totalExercises:
+        sessionDay.exercises.length,
 
       currentSet:
         currentSetNumber,
@@ -778,17 +784,13 @@ export function WorkoutPage() {
       );
     }
 
-    setRealtimeStatus(
-      "connecting",
-    );
-
+    setRealtimeStatus("connecting");
     setRealtimeError(null);
 
     /*
-     * First ask our secure backend for an
-     * ephemeral OpenAI Realtime credential.
+     * Solicita la credencial efímera Realtime
+     * al backend seguro.
      */
-
     const realtimeSession =
       await createRealtimeSession(
         firebaseUser,
@@ -804,77 +806,417 @@ export function WorkoutPage() {
     );
 
     /*
-     * Then establish WebRTC.
-     *
-     * This is the point at which the browser
-     * requests microphone permission.
+     * Establece WebRTC y solicita
+     * permisos de micrófono.
      */
-
     const realtimeConnection =
       await connectRealtime({
         clientSecret:
           realtimeSession.clientSecret,
 
-        onConnectionStateChange:
-          (
+        /*
+         * ------------------------------------------------------
+         * WEBRTC CONNECTION STATE
+         * ------------------------------------------------------
+         */
+
+        onConnectionStateChange: (
+          connectionState,
+        ) => {
+          console.info(
+            "ARIA WebRTC connection:",
             connectionState,
-          ) => {
-            console.info(
-              "ARIA WebRTC connection:",
-              connectionState,
-            );
-
-            if (
-              connectionState ===
-                "connected"
-            ) {
-              setRealtimeStatus(
-                "connected",
-              );
-
-              setRealtimeError(
-                null,
-              );
-
-              setMessage(
-                "ARIA is connected. Put on your headphones.",
-              );
-
-              return;
-            }
-
-            if (
-              connectionState ===
-                "disconnected" ||
-              connectionState ===
-                "closed" ||
-              connectionState ===
-                "failed"
-            ) {
-              setRealtimeStatus(
-                "disconnected",
-              );
-            }
-          },
-
-        onEvent: (event) => {
-          /*
-           * We are intentionally logging Realtime
-           * events for this first audio test.
-           *
-           * Function calls and structured handling
-           * will be added in the next phase.
-           */
+          );
 
           if (
-            event.type
+            connectionState ===
+            "connected"
           ) {
+            setRealtimeStatus(
+              "connected",
+            );
+
+            setRealtimeError(null);
+
+            setMessage(
+              "ARIA is connected. Put on your headphones.",
+            );
+
+            return;
+          }
+
+          if (
+            connectionState ===
+              "disconnected" ||
+            connectionState ===
+              "closed" ||
+            connectionState ===
+              "failed"
+          ) {
+            setRealtimeStatus(
+              "disconnected",
+            );
+          }
+        },
+
+        /*
+         * ------------------------------------------------------
+         * RAW REALTIME EVENTS
+         * ------------------------------------------------------
+         */
+
+        onEvent: (event) => {
+          if (event.type) {
             console.info(
               "ARIA Realtime event:",
               event.type,
               event,
             );
           }
+        },
+
+        /*
+         * ------------------------------------------------------
+         * ARIA FUNCTION CALLS
+         * ------------------------------------------------------
+         *
+         * This is the bridge between ARIA's voice
+         * intelligence and the workout engine.
+         */
+
+        onFunctionCall: async (
+          functionCall,
+        ) => {
+          console.info(
+            "ARIA function call:",
+            functionCall,
+          );
+
+          const {
+            callId,
+            name,
+            arguments: functionArguments,
+          } = functionCall;
+
+          /*
+           * ----------------------------------------------------
+           * COMPLETE SET
+           * ----------------------------------------------------
+           */
+
+          if (
+            name ===
+            "complete_set"
+          ) {
+            console.info(
+              "ARIA requested current set completion.",
+            );
+
+            const result =
+              await completeCurrentSet();
+
+            sendRealtimeFunctionResult(
+              realtimeConnection.dataChannel,
+              callId,
+              result,
+            );
+
+            return;
+          }
+
+          /*
+           * ----------------------------------------------------
+           * GET WORKOUT STATE
+           * ----------------------------------------------------
+           */
+
+          if (
+            name ===
+            "get_workout_state"
+          ) {
+            try {
+              /*
+               * currentExercise, currentConfig,
+               * currentSetNumber and sessionDay are
+               * the authoritative React workout state.
+               */
+
+              const workoutState = {
+                success: true,
+
+                exercise:
+                  currentExercise
+                    ?.exercise
+                    ?.name ??
+                  "Current exercise",
+
+                exerciseIndex:
+                  currentExerciseIndex,
+
+                totalExercises:
+                  sessionDay?.exercises
+                    .length ??
+                  0,
+
+                currentSet:
+                  currentSetNumber,
+
+                totalSets:
+                  currentConfig?.sets ??
+                  0,
+
+                targetReps:
+                  currentConfig?.reps ??
+                  null,
+
+                targetDurationSeconds:
+                  currentConfig
+                    ?.durationSeconds ??
+                  null,
+
+                restSeconds:
+                  currentConfig
+                    ?.restSeconds ??
+                  0,
+
+                isResting:
+                  restRemainingSeconds >
+                    0,
+
+                restRemainingSeconds:
+                  restRemainingSeconds,
+
+                workoutRemainingSeconds,
+
+                ariaRemainingSeconds,
+              };
+
+              console.info(
+                "ARIA requested workout state:",
+                workoutState,
+              );
+
+              sendRealtimeFunctionResult(
+                realtimeConnection.dataChannel,
+                callId,
+                workoutState,
+              );
+            } catch (
+              functionError
+            ) {
+              console.error(
+                "ARIA get_workout_state failed:",
+                functionError,
+              );
+
+              sendRealtimeFunctionResult(
+                realtimeConnection.dataChannel,
+                callId,
+                {
+                  success: false,
+                  action:
+                    "get_workout_state",
+                  error:
+                    functionError instanceof
+                    Error
+                      ? functionError.message
+                      : "Unable to retrieve workout state.",
+                },
+              );
+            }
+
+            return;
+          }
+
+          /*
+           * ----------------------------------------------------
+           * GET NEXT EXERCISE
+           * ----------------------------------------------------
+           */
+
+          if (
+            name ===
+            "get_next_exercise"
+          ) {
+            try {
+              const nextExerciseIndex =
+                currentExerciseIndex + 1;
+
+              const totalExercises =
+                sessionDay?.exercises.length ??
+                0;
+
+              /*
+               * There is no next exercise.
+               */
+              if (
+                nextExerciseIndex >=
+                totalExercises
+              ) {
+                const result = {
+                  success: true,
+
+                  hasNextExercise: false,
+
+                  message:
+                    "There is no next exercise. The current workout is at its final exercise.",
+
+                  currentExercise:
+                    currentExercise?.exercise
+                      ?.name ??
+                    "Current exercise",
+
+                  currentExerciseIndex,
+
+                  totalExercises,
+                };
+
+                console.info(
+                  "ARIA requested next exercise:",
+                  result,
+                );
+
+                sendRealtimeFunctionResult(
+                  realtimeConnection.dataChannel,
+                  callId,
+                  result,
+                );
+
+                return;
+              }
+
+              /*
+               * Get the actual next exercise
+               * from the workout session.
+               */
+              const nextExercise =
+                sessionDay?.exercises[
+                  nextExerciseIndex
+                ] ?? null;
+
+              if (!nextExercise) {
+                const result = {
+                  success: false,
+
+                  hasNextExercise: false,
+
+                  error:
+                    "The next exercise could not be found in the current workout.",
+                };
+
+                console.warn(
+                  "ARIA could not find next exercise:",
+                  result,
+                );
+
+                sendRealtimeFunctionResult(
+                  realtimeConnection.dataChannel,
+                  callId,
+                  result,
+                );
+
+                return;
+              }
+
+              /*
+               * The program configuration for
+               * the next exercise.
+               */
+              const nextConfig =
+                nextExercise.programExercise ??
+                null;
+
+              const result = {
+                success: true,
+
+                hasNextExercise: true,
+
+                exercise:
+                  nextExercise.exercise
+                    ?.name ??
+                  "Next exercise",
+
+                exerciseIndex:
+                  nextExerciseIndex,
+
+                totalExercises,
+
+                sets:
+                  nextConfig?.sets ??
+                  0,
+
+                reps:
+                  nextConfig?.reps ??
+                  null,
+
+                durationSeconds:
+                  nextConfig?.durationSeconds ??
+                  null,
+
+                restSeconds:
+                  nextConfig?.restSeconds ??
+                  0,
+              };
+
+              console.info(
+                "ARIA requested next exercise:",
+                result,
+              );
+
+              sendRealtimeFunctionResult(
+                realtimeConnection.dataChannel,
+                callId,
+                result,
+              );
+            } catch (
+              functionError
+            ) {
+              console.error(
+                "ARIA get_next_exercise failed:",
+                functionError,
+              );
+
+              sendRealtimeFunctionResult(
+                realtimeConnection.dataChannel,
+                callId,
+                {
+                  success: false,
+
+                  hasNextExercise: false,
+
+                  error:
+                    functionError instanceof
+                    Error
+                      ? functionError.message
+                      : "Unable to retrieve the next exercise.",
+                },
+              );
+            }
+
+            return;
+          }
+
+          /*
+           * ----------------------------------------------------
+           * UNKNOWN FUNCTION
+           * ----------------------------------------------------
+           */
+
+          console.warn(
+            "ARIA requested an unknown function:",
+            name,
+            functionArguments,
+          );
+
+          sendRealtimeFunctionResult(
+            realtimeConnection.dataChannel,
+            callId,
+            {
+              success: false,
+              error:
+                `Unknown ARIA function: ${name}`,
+            },
+          );
         },
       });
 
@@ -1030,59 +1372,64 @@ export function WorkoutPage() {
        * on React state updates having completed.
        */
 
-      const realtimeContext:
-        RealtimeCoachContext = {
-        preferredLanguage:
-          clientProfile?.preferredLanguage ??
-          "auto",
+     const realtimeContext:
+  RealtimeCoachContext = {
+  preferredLanguage:
+    clientProfile?.preferredLanguage ??
+    "auto",
 
-        clientName:
-          clientProfile?.displayName ??
-          firebaseUser.displayName ??
-          "Client",
+  clientName:
+    clientProfile?.displayName ??
+    firebaseUser.displayName ??
+    "Client",
 
-        fitnessLevel:
-          clientProfile?.fitnessLevel,
+  fitnessLevel:
+    clientProfile?.fitnessLevel,
 
-        primaryGoals:
-          clientProfile?.primaryGoals ??
-          [],
+  primaryGoals:
+    clientProfile?.primaryGoals ??
+    [],
 
-        programName:
-          program.name,
+  programName:
+    program.name,
 
-        dayName:
-          sessionDay.day.name,
+  dayName:
+    sessionDay.day.name,
 
-        currentExercise:
-          currentExercise.exercise
-            ?.name ??
-          "Current exercise",
+  currentExercise:
+    currentExercise.exercise
+      ?.name ??
+    "Current exercise",
 
-        currentSet: 1,
+  currentExerciseIndex,
 
-        totalSets:
-          currentConfig?.sets ??
-          0,
+  totalExercises:
+    sessionDay.exercises.length,
 
-        targetReps:
-          currentConfig?.reps,
+  currentSet: 1,
 
-        targetDurationSeconds:
-          currentConfig?.durationSeconds,
+  totalSets:
+    currentConfig?.sets ??
+    0,
 
-        restSeconds:
-          currentConfig?.restSeconds ??
-          0,
+  targetReps:
+    currentConfig?.reps,
 
-        ariaRemainingSeconds:
-          DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+  targetDurationSeconds:
+    currentConfig?.durationSeconds,
 
-        workoutRemainingSeconds:
-          DEFAULT_WORKOUT_DURATION_SECONDS,
+  restSeconds:
+    currentConfig?.restSeconds ??
+    0,
 
-        mode: "voice",
-      };
+  ariaRemainingSeconds:
+    DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+
+  workoutRemainingSeconds:
+    DEFAULT_WORKOUT_DURATION_SECONDS,
+
+  mode: "voice",
+};
 
       console.info(
         "ARIA realtime context:",
@@ -1234,13 +1581,26 @@ export function WorkoutPage() {
       !currentExercise?.exercise ||
       isResting
     ) {
-      return;
+      return {
+        success: false,
+        reason: isResting
+          ? "The workout is currently resting."
+          : "The current workout state is unavailable.",
+      };
     }
 
     const exerciseId =
       currentExercise.exercise.id;
 
-    const completedAt = new Date();
+    const exerciseName =
+      currentExercise.exercise.name ??
+      "Current exercise";
+
+    const completedSetNumber =
+      currentSetNumber;
+
+    const completedAt =
+      new Date();
 
     try {
       /*
@@ -1251,9 +1611,12 @@ export function WorkoutPage() {
         sessionId,
         {
           exerciseId,
-          setNumber: currentSetNumber,
 
-          targetReps: currentConfig.reps,
+          setNumber:
+            currentSetNumber,
+
+          targetReps:
+            currentConfig.reps,
 
           targetDurationSeconds:
             currentConfig.durationSeconds,
@@ -1265,12 +1628,14 @@ export function WorkoutPage() {
            * Later ARIA/manual input will provide
            * the real performed values.
            */
-          actualReps: currentConfig.reps,
+          actualReps:
+            currentConfig.reps,
 
           actualDurationSeconds:
             currentConfig.durationSeconds,
 
           completed: true,
+
           completedAt,
         },
       );
@@ -1280,7 +1645,8 @@ export function WorkoutPage() {
         {
           sessionId,
           exerciseId,
-          setNumber: currentSetNumber,
+          setNumber:
+            currentSetNumber,
         },
       );
 
@@ -1289,7 +1655,8 @@ export function WorkoutPage() {
        * the final set of the exercise.
        */
       const isLastSet =
-        currentSetNumber >= currentConfig.sets;
+        currentSetNumber >=
+        currentConfig.sets;
 
       const restSeconds =
         currentConfig.restSeconds;
@@ -1300,30 +1667,64 @@ export function WorkoutPage() {
       if (isLastSet) {
         const isLastExercise =
           currentExerciseIndex >=
-          (sessionDay?.exercises.length ?? 1) - 1;
+          (sessionDay?.exercises.length ??
+            1) -
+            1;
 
+        /*
+         * ------------------------------------------------------
+         * Final set but there is another exercise.
+         * ------------------------------------------------------
+         */
         if (!isLastExercise) {
           const nextExerciseIndex =
             currentExerciseIndex + 1;
 
           if (restSeconds > 0) {
-            setRestRemainingSeconds(restSeconds);
+            setRestRemainingSeconds(
+              restSeconds,
+            );
+
             setPendingTransition({
               type: "next-exercise",
               nextExerciseIndex,
             });
+
             setIsResting(true);
 
             setMessage(
               `Exercise complete. Rest for ${restSeconds} seconds.`,
             );
 
-            return;
+            return {
+              success: true,
+
+              action:
+                "complete_set",
+
+              completedSet:
+                completedSetNumber,
+
+              completedExercise:
+                exerciseName,
+
+              isLastSet: true,
+
+              isLastExercise: false,
+
+              transition:
+                "next-exercise",
+
+              nextExerciseIndex,
+
+              restSeconds,
+            };
           }
 
           setCurrentExerciseIndex(
             nextExerciseIndex,
           );
+
           setCurrentSetNumber(1);
 
           await updateWorkoutSession(
@@ -1331,6 +1732,7 @@ export function WorkoutPage() {
             {
               currentExerciseIndex:
                 nextExerciseIndex,
+
               currentSetNumber: 1,
             },
           );
@@ -1339,78 +1741,214 @@ export function WorkoutPage() {
             "Exercise complete. Begin the next exercise.",
           );
 
-          return;
+          return {
+            success: true,
+
+            action:
+              "complete_set",
+
+            completedSet:
+              completedSetNumber,
+
+            completedExercise:
+              exerciseName,
+
+            isLastSet: true,
+
+            isLastExercise: false,
+
+            transition:
+              "next-exercise",
+
+            nextExerciseIndex,
+
+            restSeconds: 0,
+          };
         }
 
         /*
-         * Final set of the final exercise.
+         * ------------------------------------------------------
+         * Final set of final exercise.
+         * ------------------------------------------------------
          */
         if (restSeconds > 0) {
-          setRestRemainingSeconds(restSeconds);
+          setRestRemainingSeconds(
+            restSeconds,
+          );
+
           setPendingTransition({
             type: "workout-ready",
           });
+
           setIsResting(true);
 
           setMessage(
             `Final set complete. Rest for ${restSeconds} seconds.`,
           );
 
-          return;
+          return {
+            success: true,
+
+            action:
+              "complete_set",
+
+            completedSet:
+              completedSetNumber,
+
+            completedExercise:
+              exerciseName,
+
+            isLastSet: true,
+
+            isLastExercise: true,
+
+            transition:
+              "workout-ready",
+
+            restSeconds,
+          };
         }
 
         setMessage(
           "All exercises are complete. You can finish the workout.",
         );
 
-        return;
+        return {
+          success: true,
+
+          action:
+            "complete_set",
+
+          completedSet:
+            completedSetNumber,
+
+          completedExercise:
+            exerciseName,
+
+          isLastSet: true,
+
+          isLastExercise: true,
+
+          transition:
+            "workout-complete",
+
+          restSeconds: 0,
+        };
       }
 
       /*
-       * 4. There are more sets
-       * in the current exercise.
+       * --------------------------------------------------------
+       * There are more sets in the current exercise.
+       * --------------------------------------------------------
        */
+
       const nextSet =
         currentSetNumber + 1;
 
       if (restSeconds > 0) {
-        setRestRemainingSeconds(restSeconds);
+        setRestRemainingSeconds(
+          restSeconds,
+        );
+
         setPendingTransition({
           type: "next-set",
           nextSet,
         });
+
         setIsResting(true);
 
         setMessage(
           `Set complete. Rest for ${restSeconds} seconds.`,
         );
 
-        return;
+        return {
+          success: true,
+
+          action:
+            "complete_set",
+
+          completedSet:
+            completedSetNumber,
+
+          completedExercise:
+            exerciseName,
+
+          isLastSet: false,
+
+          isLastExercise: false,
+
+          transition:
+            "next-set",
+
+          nextSet,
+
+          restSeconds,
+        };
       }
 
-      setCurrentSetNumber(nextSet);
+      setCurrentSetNumber(
+        nextSet,
+      );
 
       await updateWorkoutSession(
         sessionId,
         {
-          currentSetNumber: nextSet,
+          currentSetNumber:
+            nextSet,
         },
       );
 
       setMessage(
         `Set complete. Starting set ${nextSet}.`,
       );
+
+      return {
+        success: true,
+
+        action:
+          "complete_set",
+
+        completedSet:
+          completedSetNumber,
+
+        completedExercise:
+          exerciseName,
+
+        isLastSet: false,
+
+        isLastExercise: false,
+
+        transition:
+          "next-set",
+
+        nextSet,
+
+        restSeconds: 0,
+      };
     } catch (recordError) {
       console.error(
         "Failed to record workout set:",
         recordError,
       );
 
-      setError(
+      const errorMessage =
         recordError instanceof Error
           ? recordError.message
-          : "Unable to record the completed set.",
+          : "Unable to record the completed set.";
+
+      setError(
+        errorMessage,
       );
+
+      return {
+        success: false,
+
+        action:
+          "complete_set",
+
+        error:
+          errorMessage,
+      };
     }
   }
 
