@@ -24,6 +24,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
   completeWorkoutSession,
   createWorkoutSession,
+  createWorkoutSet,
   getActiveProgramForClient,
   getClientProfile,
   getProgramDayExercises,
@@ -94,6 +95,19 @@ type RealtimeStatus =
   | "connected"
   | "disconnected"
   | "error";
+
+type PendingTransition =
+  | {
+      type: "next-set";
+      nextSet: number;
+    }
+  | {
+      type: "next-exercise";
+      nextExerciseIndex: number;
+    }
+  | {
+      type: "workout-ready";
+    };
 
 /* ============================================================
    TEMPORARY TEST VALUES
@@ -169,6 +183,11 @@ export function WorkoutPage() {
 
   const [restRemainingSeconds, setRestRemainingSeconds] =
     useState(0);
+  const [isResting, setIsResting] =
+    useState(false);
+
+  const [pendingTransition, setPendingTransition] =
+    useState<PendingTransition | null>(null);
 
   const [ariaWarningSent, setAriaWarningSent] =
     useState(false);
@@ -537,6 +556,97 @@ export function WorkoutPage() {
       );
   }, [status]);
 
+  useEffect(() => {
+    if (
+      !isResting ||
+      restRemainingSeconds > 0 ||
+      !pendingTransition ||
+      !sessionId
+    ) {
+      return;
+    }
+
+    const transition = pendingTransition;
+
+    setPendingTransition(null);
+    setIsResting(false);
+
+    if (transition.type === "next-set") {
+      const nextSet = transition.nextSet;
+
+      setCurrentSetNumber(nextSet);
+
+      void updateWorkoutSession(
+        sessionId,
+        {
+          currentSetNumber: nextSet,
+        },
+      ).catch((advanceError) => {
+        console.error(
+          "Failed to advance to next set:",
+          advanceError,
+        );
+
+        setError(
+          advanceError instanceof Error
+            ? advanceError.message
+            : "Unable to advance to the next set.",
+        );
+      });
+
+      setMessage(
+        `Rest complete. Start set ${nextSet}.`,
+      );
+
+      return;
+    }
+
+    if (transition.type === "next-exercise") {
+      const nextExerciseIndex =
+        transition.nextExerciseIndex;
+
+      setCurrentExerciseIndex(
+        nextExerciseIndex,
+      );
+      setCurrentSetNumber(1);
+
+      void updateWorkoutSession(
+        sessionId,
+        {
+          currentExerciseIndex:
+            nextExerciseIndex,
+          currentSetNumber: 1,
+        },
+      ).catch((advanceError) => {
+        console.error(
+          "Failed to advance to next exercise:",
+          advanceError,
+        );
+
+        setError(
+          advanceError instanceof Error
+            ? advanceError.message
+            : "Unable to advance to the next exercise.",
+        );
+      });
+
+      setMessage(
+        "Rest complete. Begin the next exercise.",
+      );
+
+      return;
+    }
+
+    setMessage(
+      "Rest complete. All exercises are complete. You can finish the workout.",
+    );
+  }, [
+    isResting,
+    restRemainingSeconds,
+    pendingTransition,
+    sessionId,
+  ]);
+
   /* ==========================================================
      ARIA VOICE WINDOW
      ========================================================== */
@@ -901,6 +1011,9 @@ export function WorkoutPage() {
         0,
       );
 
+      setIsResting(false);
+      setPendingTransition(null);
+
       setAriaWarningSent(
         false,
       );
@@ -1117,79 +1230,188 @@ export function WorkoutPage() {
   async function completeCurrentSet() {
     if (
       !sessionId ||
-      !currentConfig
+      !currentConfig ||
+      !currentExercise?.exercise ||
+      isResting
     ) {
       return;
     }
 
-    const isLastSet =
-      currentSetNumber >=
-      currentConfig.sets;
+    const exerciseId =
+      currentExercise.exercise.id;
 
-    if (isLastSet) {
-      setRestRemainingSeconds(
-        currentConfig.restSeconds,
+    const completedAt = new Date();
+
+    try {
+      /*
+       * 1. Register the completed set
+       * in Firestore BEFORE advancing.
+       */
+      await createWorkoutSet(
+        sessionId,
+        {
+          exerciseId,
+          setNumber: currentSetNumber,
+
+          targetReps: currentConfig.reps,
+
+          targetDurationSeconds:
+            currentConfig.durationSeconds,
+
+          /*
+           * First MVP:
+           * actual values use the target values.
+           *
+           * Later ARIA/manual input will provide
+           * the real performed values.
+           */
+          actualReps: currentConfig.reps,
+
+          actualDurationSeconds:
+            currentConfig.durationSeconds,
+
+          completed: true,
+          completedAt,
+        },
       );
 
-      if (
-        currentExerciseIndex <
-        (sessionDay?.exercises
-          .length ??
-          1) -
-          1
-      ) {
-        const nextExerciseIndex =
-          currentExerciseIndex +
-          1;
-
-        setCurrentExerciseIndex(
-          nextExerciseIndex,
-        );
-
-        setCurrentSetNumber(
-          1,
-        );
-
-        await updateWorkoutSession(
+      console.info(
+        "Workout set recorded:",
+        {
           sessionId,
-          {
-            currentExerciseIndex:
-              nextExerciseIndex,
+          exerciseId,
+          setNumber: currentSetNumber,
+        },
+      );
 
-            currentSetNumber:
-              1,
-          },
+      /*
+       * 2. Determine whether this was
+       * the final set of the exercise.
+       */
+      const isLastSet =
+        currentSetNumber >= currentConfig.sets;
+
+      const restSeconds =
+        currentConfig.restSeconds;
+
+      /*
+       * 3. Final set of current exercise.
+       */
+      if (isLastSet) {
+        const isLastExercise =
+          currentExerciseIndex >=
+          (sessionDay?.exercises.length ?? 1) - 1;
+
+        if (!isLastExercise) {
+          const nextExerciseIndex =
+            currentExerciseIndex + 1;
+
+          if (restSeconds > 0) {
+            setRestRemainingSeconds(restSeconds);
+            setPendingTransition({
+              type: "next-exercise",
+              nextExerciseIndex,
+            });
+            setIsResting(true);
+
+            setMessage(
+              `Exercise complete. Rest for ${restSeconds} seconds.`,
+            );
+
+            return;
+          }
+
+          setCurrentExerciseIndex(
+            nextExerciseIndex,
+          );
+          setCurrentSetNumber(1);
+
+          await updateWorkoutSession(
+            sessionId,
+            {
+              currentExerciseIndex:
+                nextExerciseIndex,
+              currentSetNumber: 1,
+            },
+          );
+
+          setMessage(
+            "Exercise complete. Begin the next exercise.",
+          );
+
+          return;
+        }
+
+        /*
+         * Final set of the final exercise.
+         */
+        if (restSeconds > 0) {
+          setRestRemainingSeconds(restSeconds);
+          setPendingTransition({
+            type: "workout-ready",
+          });
+          setIsResting(true);
+
+          setMessage(
+            `Final set complete. Rest for ${restSeconds} seconds.`,
+          );
+
+          return;
+        }
+
+        setMessage(
+          "All exercises are complete. You can finish the workout.",
         );
 
         return;
       }
 
-      setMessage(
-        "All exercises are complete. Continue until the workout ends or finish the session.",
+      /*
+       * 4. There are more sets
+       * in the current exercise.
+       */
+      const nextSet =
+        currentSetNumber + 1;
+
+      if (restSeconds > 0) {
+        setRestRemainingSeconds(restSeconds);
+        setPendingTransition({
+          type: "next-set",
+          nextSet,
+        });
+        setIsResting(true);
+
+        setMessage(
+          `Set complete. Rest for ${restSeconds} seconds.`,
+        );
+
+        return;
+      }
+
+      setCurrentSetNumber(nextSet);
+
+      await updateWorkoutSession(
+        sessionId,
+        {
+          currentSetNumber: nextSet,
+        },
       );
 
-      return;
+      setMessage(
+        `Set complete. Starting set ${nextSet}.`,
+      );
+    } catch (recordError) {
+      console.error(
+        "Failed to record workout set:",
+        recordError,
+      );
+
+      setError(
+        recordError instanceof Error
+          ? recordError.message
+          : "Unable to record the completed set.",
+      );
     }
-
-    const nextSet =
-      currentSetNumber +
-      1;
-
-    setCurrentSetNumber(
-      nextSet,
-    );
-
-    setRestRemainingSeconds(
-      currentConfig.restSeconds,
-    );
-
-    await updateWorkoutSession(
-      sessionId,
-      {
-        currentSetNumber:
-          nextSet,
-      },
-    );
   }
 
   /* ==========================================================
@@ -1944,6 +2166,7 @@ export function WorkoutPage() {
                 disabled={
                   status !==
                     "active" ||
+                  isResting ||
                   restRemainingSeconds >
                     0
                 }
