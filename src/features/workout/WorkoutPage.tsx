@@ -28,6 +28,7 @@ import {
   getActiveProgramForClient,
   getClientProfile,
   getProgramDayExercises,
+  hasPreviousAriaSession,
   listProgramDays,
   updateWorkoutSession,
 } from "../../services/firestore";
@@ -205,6 +206,9 @@ export function WorkoutPage() {
 
   const [realtimeError, setRealtimeError] =
     useState<string | null>(null);
+
+  const [ariaFirstSession, setAriaFirstSession] =
+    useState<boolean>(false);
 
   const realtimeSessionRef =
     useRef<RealtimeClientSession | null>(
@@ -500,6 +504,8 @@ export function WorkoutPage() {
         visualMode
           ? "visual"
           : "voice",
+
+      ariaFirstSession,
     };
   }
 
@@ -1278,7 +1284,28 @@ export function WorkoutPage() {
 
     try {
       /*
-       * 1. Create persistent workout session.
+       * 1. Check if client has used ARIA before.
+       */
+
+      const hasUsedAria =
+        await hasPreviousAriaSession(
+          uid,
+        );
+
+      const isFirstAriaSession =
+        !hasUsedAria;
+
+      setAriaFirstSession(
+        isFirstAriaSession,
+      );
+
+      console.info(
+        "ARIA first session:",
+        isFirstAriaSession,
+      );
+
+      /*
+       * 2. Create persistent workout session.
        */
 
       const workoutSession: Omit<
@@ -1365,7 +1392,7 @@ export function WorkoutPage() {
       );
 
       /*
-       * 2. Build trusted session context.
+       * 3. Build trusted session context.
        *
        * At session start we explicitly use the
        * known initial timer values rather than relying
@@ -1429,6 +1456,9 @@ export function WorkoutPage() {
     DEFAULT_WORKOUT_DURATION_SECONDS,
 
   mode: "voice",
+
+  ariaFirstSession:
+    isFirstAriaSession,
 };
 
       console.info(

@@ -875,6 +875,36 @@ export async function getWorkoutSession(
   };
 }
 
+export async function hasPreviousAriaSession(
+  clientId: string,
+): Promise<boolean> {
+  const sessionsQuery = query(
+    collection(
+      db,
+      "workoutSessions",
+    ),
+    where(
+      "clientId",
+      "==",
+      clientId,
+    ),
+    where(
+      "mode",
+      "==",
+      "voice",
+    ),
+    limit(1),
+  );
+
+  const snapshot =
+    await getDocs(
+      sessionsQuery,
+    );
+
+  return !snapshot.empty;
+}
+
+
 export async function updateWorkoutSession(
   sessionId: string,
   updates: Partial<
