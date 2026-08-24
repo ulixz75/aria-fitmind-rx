@@ -238,56 +238,47 @@ export async function connectRealtime(
           "response.function_call_arguments.done"
         ) {
           const callId =
-            typeof parsed.call_id ===
-            "string"
+            typeof parsed.call_id === "string"
               ? parsed.call_id
               : "";
 
           const name =
-            typeof parsed.name ===
-            "string"
+            typeof parsed.name === "string"
               ? parsed.name
               : "";
 
-          let args: Record<
-            string,
-            unknown
-          > = {};
+          let args: Record<string, unknown> = {};
 
           if (
-            typeof parsed.arguments ===
-            "string"
+            typeof parsed.arguments === "string" &&
+            parsed.arguments.trim().length > 0
           ) {
             try {
-              const parsedArguments =
-                JSON.parse(
-                  parsed.arguments,
-                );
+              const parsedArguments = JSON.parse(parsed.arguments);
 
               if (
                 parsedArguments &&
-                typeof parsedArguments ===
-                  "object"
+                typeof parsedArguments === "object" &&
+                !Array.isArray(parsedArguments)
               ) {
-                args =
-                  parsedArguments as Record<
-                    string,
-                    unknown
-                  >;
+                args = parsedArguments as Record<string, unknown>;
               }
-            } catch (argumentError) {
+            } catch (error) {
               console.warn(
-                "Unable to parse ARIA function arguments:",
-                argumentError,
+                "ARIA function arguments could not be parsed:",
                 parsed.arguments,
+                error,
               );
             }
           }
 
-          if (
-            callId &&
-            name
-          ) {
+          console.info("ARIA function call event:", {
+            callId,
+            name,
+            arguments: args,
+          });
+
+          if (callId && name) {
             onFunctionCall?.({
               callId,
               name,
@@ -445,24 +436,12 @@ export function sendRealtimeFunctionResult(
   callId: string,
   output: unknown,
 ): void {
-  if (
-    dataChannel.readyState !==
-    "open"
-  ) {
-    throw new Error(
-      "ARIA Realtime data channel is not open.",
+  if (dataChannel.readyState !== "open") {
+    console.warn(
+      "ARIA function result could not be sent because the data channel is not open.",
     );
+    return;
   }
-
-  const serializedOutput =
-    typeof output === "string"
-      ? output
-      : JSON.stringify(output);
-
-  /*
-   * Send the function result
-   * back to the Realtime model.
-   */
 
   dataChannel.send(
     JSON.stringify({
@@ -474,16 +453,12 @@ export function sendRealtimeFunctionResult(
         call_id: callId,
 
         output:
-          serializedOutput,
+          typeof output === "string"
+            ? output
+            : JSON.stringify(output),
       },
     }),
   );
-
-  /*
-   * Ask the model to continue
-   * the response after receiving
-   * the function result.
-   */
 
   dataChannel.send(
     JSON.stringify({

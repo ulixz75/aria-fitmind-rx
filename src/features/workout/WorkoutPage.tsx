@@ -194,6 +194,9 @@ export function WorkoutPage() {
   const [ariaWarningSent, setAriaWarningSent] =
     useState(false);
 
+  const [ariaVoiceActive, setAriaVoiceActive] =
+    useState(false);
+
   const [manualControlsOpen, setManualControlsOpen] =
     useState(false);
 
@@ -370,6 +373,53 @@ export function WorkoutPage() {
     currentExercise?.programExercise ??
     null;
 
+  /*
+   * ==========================================================
+   * LATEST WORKOUT STATE FOR REALTIME CALLBACKS
+   * ----------------------------------------------------------
+   * Realtime function callbacks can outlive the React render
+   * that created them. This ref always points to the latest
+   * workout state so ARIA never works with stale set/exercise
+   * information.
+   * ==========================================================
+   */
+
+  const latestWorkoutStateRef = useRef({
+    sessionId,
+
+    currentExerciseIndex,
+
+    currentSetNumber,
+
+    restRemainingSeconds,
+
+    isResting,
+
+    currentExercise,
+
+    currentConfig,
+
+    sessionDay,
+  });
+
+  latestWorkoutStateRef.current = {
+    sessionId,
+
+    currentExerciseIndex,
+
+    currentSetNumber,
+
+    restRemainingSeconds,
+
+    isResting,
+
+    currentExercise,
+
+    currentConfig,
+
+    sessionDay,
+  };
+
   /* ==========================================================
      TIME FORMATTER
      ========================================================== */
@@ -543,14 +593,6 @@ export function WorkoutPage() {
             },
           );
 
-          setAriaElapsedSeconds(
-            (current) =>
-              Math.min(
-                current + 1,
-                DEFAULT_ARIA_VOICE_DURATION_SECONDS,
-              ),
-          );
-
           setRestRemainingSeconds(
             (current) =>
               Math.max(
@@ -567,6 +609,34 @@ export function WorkoutPage() {
         timer,
       );
   }, [status]);
+
+  useEffect(() => {
+    if (!ariaVoiceActive) return;
+    if (status !== "active") return;
+
+    const timer =
+      window.setInterval(
+        () => {
+          setAriaElapsedSeconds(
+            (current) => {
+              const next =
+                Math.min(
+                  current + 1,
+                  DEFAULT_ARIA_VOICE_DURATION_SECONDS,
+                );
+
+              return next;
+            },
+          );
+        },
+        1000,
+      );
+
+    return () =>
+      window.clearInterval(
+        timer,
+      );
+  }, [ariaVoiceActive, status]);
 
   useEffect(() => {
     if (
@@ -689,6 +759,8 @@ export function WorkoutPage() {
       session?.mode !== "visual" &&
       sessionId
     ) {
+      setAriaVoiceActive(false);
+
       setSession(
         (current) =>
           current
@@ -862,6 +934,7 @@ export function WorkoutPage() {
             setRealtimeStatus(
               "disconnected",
             );
+            setAriaVoiceActive(false);
           }
         },
 
@@ -872,12 +945,35 @@ export function WorkoutPage() {
          */
 
         onEvent: (event) => {
-          if (event.type) {
-            console.info(
-              "ARIA Realtime event:",
-              event.type,
-              event,
-            );
+          console.info(
+            "ARIA Realtime event:",
+            event.type,
+            event,
+          );
+
+          switch (event.type) {
+            case "input_audio_buffer.speech_started":
+              setAriaVoiceActive(true);
+              break;
+
+            case "response.created":
+              setAriaVoiceActive(true);
+              break;
+
+            case "output_audio_buffer.started":
+              setAriaVoiceActive(true);
+              break;
+
+            case "output_audio_buffer.stopped":
+              setAriaVoiceActive(false);
+              break;
+
+            case "response.done":
+              setAriaVoiceActive(false);
+              break;
+
+            default:
+              break;
           }
         },
 
@@ -941,56 +1037,65 @@ export function WorkoutPage() {
             "get_workout_state"
           ) {
             try {
-              /*
-               * currentExercise, currentConfig,
-               * currentSetNumber and sessionDay are
-               * the authoritative React workout state.
-               */
+              const {
+                currentExercise:
+                  activeCurrentExercise,
+                currentExerciseIndex:
+                  activeCurrentExerciseIndex,
+                currentSetNumber:
+                  activeCurrentSetNumber,
+                currentConfig:
+                  activeCurrentConfig,
+                sessionDay:
+                  activeSessionDay,
+                restRemainingSeconds:
+                  activeRestRemainingSeconds,
+              } = latestWorkoutStateRef.current;
 
               const workoutState = {
                 success: true,
 
                 exercise:
-                  currentExercise
+                  activeCurrentExercise
                     ?.exercise
                     ?.name ??
                   "Current exercise",
 
                 exerciseIndex:
-                  currentExerciseIndex,
+                  activeCurrentExerciseIndex,
 
                 totalExercises:
-                  sessionDay?.exercises
+                  activeSessionDay?.exercises
                     .length ??
                   0,
 
                 currentSet:
-                  currentSetNumber,
+                  activeCurrentSetNumber,
 
                 totalSets:
-                  currentConfig?.sets ??
+                  activeCurrentConfig?.sets ??
                   0,
 
                 targetReps:
-                  currentConfig?.reps ??
+                  activeCurrentConfig?.reps ??
                   null,
 
                 targetDurationSeconds:
-                  currentConfig
+                  activeCurrentConfig
                     ?.durationSeconds ??
                   null,
 
                 restSeconds:
-                  currentConfig
+                  activeCurrentConfig
                     ?.restSeconds ??
                   0,
 
                 isResting:
-                  restRemainingSeconds >
+                  activeRestRemainingSeconds >
                     0,
 
                 restRemainingSeconds:
-                  restRemainingSeconds,
+                  activeRestRemainingSeconds,
 
                 workoutRemainingSeconds,
 
@@ -1045,11 +1150,20 @@ export function WorkoutPage() {
             "get_next_exercise"
           ) {
             try {
+              const {
+                currentExercise:
+                  activeCurrentExercise,
+                currentExerciseIndex:
+                  activeCurrentExerciseIndex,
+                sessionDay:
+                  activeSessionDay,
+              } = latestWorkoutStateRef.current;
+
               const nextExerciseIndex =
-                currentExerciseIndex + 1;
+                activeCurrentExerciseIndex + 1;
 
               const totalExercises =
-                sessionDay?.exercises.length ??
+                activeSessionDay?.exercises.length ??
                 0;
 
               /*
@@ -1068,11 +1182,12 @@ export function WorkoutPage() {
                     "There is no next exercise. The current workout is at its final exercise.",
 
                   currentExercise:
-                    currentExercise?.exercise
+                    activeCurrentExercise?.exercise
                       ?.name ??
                     "Current exercise",
 
-                  currentExerciseIndex,
+                  currentExerciseIndex:
+                    activeCurrentExerciseIndex,
 
                   totalExercises,
                 };
@@ -1096,7 +1211,7 @@ export function WorkoutPage() {
                * from the workout session.
                */
               const nextExercise =
-                sessionDay?.exercises[
+                activeSessionDay?.exercises[
                   nextExerciseIndex
                 ] ?? null;
 
@@ -1198,6 +1313,86 @@ export function WorkoutPage() {
                 },
               );
             }
+
+            return;
+          }
+
+          /*
+           * ----------------------------------------------------
+           * SKIP REST
+           * ----------------------------------------------------
+           */
+
+          if (
+            name ===
+            "skip_rest"
+          ) {
+            console.info(
+              "ARIA requested rest to be skipped.",
+            );
+
+            /*
+             * There is no active rest period.
+             */
+            if (
+              !isResting ||
+              !pendingTransition
+            ) {
+              const result = {
+                success: false,
+
+                skipped: false,
+
+                reason:
+                  "There is no active rest period to skip.",
+              };
+
+              console.info(
+                "ARIA skip_rest ignored:",
+                result,
+              );
+
+              sendRealtimeFunctionResult(
+                realtimeConnection.dataChannel,
+                callId,
+                result,
+              );
+
+              return;
+            }
+
+            /*
+             * Keep the pending transition intact.
+             *
+             * Setting the remaining rest time to zero
+             * allows the existing workout transition
+             * effect to advance the workout normally.
+             */
+            setRestRemainingSeconds(0);
+
+            setMessage(
+              "Rest skipped. Continuing workout.",
+            );
+
+            const result = {
+              success: true,
+
+              skipped: true,
+
+              message:
+                "The rest period was skipped. Continue with the pending workout transition.",
+            };
+
+            console.info(
+              "ARIA rest skipped:",
+              result,
+            );
+
+            sendRealtimeFunctionResult(
+              realtimeConnection.dataChannel,
+              callId,
+              result,
+            );
 
             return;
           }
@@ -1605,29 +1800,44 @@ export function WorkoutPage() {
      ========================================================== */
 
   async function completeCurrentSet() {
+    const {
+      sessionId: activeSessionId,
+      currentExerciseIndex:
+        activeCurrentExerciseIndex,
+      currentSetNumber:
+        activeCurrentSetNumber,
+      isResting: activeIsResting,
+      currentExercise:
+        activeCurrentExercise,
+      currentConfig:
+        activeCurrentConfig,
+      sessionDay:
+        activeSessionDay,
+    } = latestWorkoutStateRef.current;
+
     if (
-      !sessionId ||
-      !currentConfig ||
-      !currentExercise?.exercise ||
-      isResting
+      !activeSessionId ||
+      !activeCurrentConfig ||
+      !activeCurrentExercise?.exercise ||
+      activeIsResting
     ) {
       return {
         success: false,
-        reason: isResting
+        reason: activeIsResting
           ? "The workout is currently resting."
           : "The current workout state is unavailable.",
       };
     }
 
     const exerciseId =
-      currentExercise.exercise.id;
+      activeCurrentExercise.exercise.id;
 
     const exerciseName =
-      currentExercise.exercise.name ??
+      activeCurrentExercise.exercise.name ??
       "Current exercise";
 
     const completedSetNumber =
-      currentSetNumber;
+      activeCurrentSetNumber;
 
     const completedAt =
       new Date();
@@ -1638,18 +1848,18 @@ export function WorkoutPage() {
        * in Firestore BEFORE advancing.
        */
       await createWorkoutSet(
-        sessionId,
+        activeSessionId,
         {
           exerciseId,
 
           setNumber:
-            currentSetNumber,
+            activeCurrentSetNumber,
 
           targetReps:
-            currentConfig.reps,
+            activeCurrentConfig.reps,
 
           targetDurationSeconds:
-            currentConfig.durationSeconds,
+            activeCurrentConfig.durationSeconds,
 
           /*
            * First MVP:
@@ -1659,10 +1869,10 @@ export function WorkoutPage() {
            * the real performed values.
            */
           actualReps:
-            currentConfig.reps,
+            activeCurrentConfig.reps,
 
           actualDurationSeconds:
-            currentConfig.durationSeconds,
+            activeCurrentConfig.durationSeconds,
 
           completed: true,
 
@@ -1673,10 +1883,10 @@ export function WorkoutPage() {
       console.info(
         "Workout set recorded:",
         {
-          sessionId,
+          sessionId: activeSessionId,
           exerciseId,
           setNumber:
-            currentSetNumber,
+            activeCurrentSetNumber,
         },
       );
 
@@ -1685,19 +1895,19 @@ export function WorkoutPage() {
        * the final set of the exercise.
        */
       const isLastSet =
-        currentSetNumber >=
-        currentConfig.sets;
+        activeCurrentSetNumber >=
+        activeCurrentConfig.sets;
 
       const restSeconds =
-        currentConfig.restSeconds;
+        activeCurrentConfig.restSeconds;
 
       /*
        * 3. Final set of current exercise.
        */
       if (isLastSet) {
         const isLastExercise =
-          currentExerciseIndex >=
-          (sessionDay?.exercises.length ??
+          activeCurrentExerciseIndex >=
+          (activeSessionDay?.exercises.length ??
             1) -
             1;
 
@@ -1708,7 +1918,7 @@ export function WorkoutPage() {
          */
         if (!isLastExercise) {
           const nextExerciseIndex =
-            currentExerciseIndex + 1;
+            activeCurrentExerciseIndex + 1;
 
           if (restSeconds > 0) {
             setRestRemainingSeconds(
@@ -1758,7 +1968,7 @@ export function WorkoutPage() {
           setCurrentSetNumber(1);
 
           await updateWorkoutSession(
-            sessionId,
+            activeSessionId,
             {
               currentExerciseIndex:
                 nextExerciseIndex,
@@ -1873,7 +2083,7 @@ export function WorkoutPage() {
        */
 
       const nextSet =
-        currentSetNumber + 1;
+        activeCurrentSetNumber + 1;
 
       if (restSeconds > 0) {
         setRestRemainingSeconds(
@@ -1921,7 +2131,7 @@ export function WorkoutPage() {
       );
 
       await updateWorkoutSession(
-        sessionId,
+        activeSessionId,
         {
           currentSetNumber:
             nextSet,
