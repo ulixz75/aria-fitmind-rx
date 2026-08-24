@@ -969,7 +969,7 @@ export function WorkoutPage() {
               break;
 
             case "response.done":
-              setAriaVoiceActive(false);
+              // La respuesta lógica terminó, pero el audio puede seguir reproduciéndose.
               break;
 
             default:
