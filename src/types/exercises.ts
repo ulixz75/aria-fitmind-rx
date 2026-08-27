@@ -10,6 +10,10 @@ export interface ExerciseMedia {
   } | null;
 
   animation?: string | null;
+
+  // Gymvisual dataset fields
+  thumbnail?: string | null;
+  gif?: string | null;
 }
 
 export interface Exercise {

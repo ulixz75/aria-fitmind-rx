@@ -37,6 +37,7 @@ export function ExerciseLibraryPage() {
               exercise.media?.flat?.start ??
               exercise.media?.classic?.peak ??
               exercise.media?.flat?.peak ??
+              exercise.media?.thumbnail ??
               null;
 
             const previewUrl =
@@ -44,7 +45,9 @@ export function ExerciseLibraryPage() {
 
             const animationUrl =
               await resolveStorageUrl(
-                exercise.media?.animation ?? null,
+                exercise.media?.animation ??
+                exercise.media?.gif ??
+                null,
               );
 
             return {

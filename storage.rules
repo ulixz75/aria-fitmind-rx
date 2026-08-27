@@ -21,6 +21,11 @@ service firebase.storage {
     }
     
 
+    match /exercises/{exerciseId}/{fileName} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     match /{allPaths=**} { allow read, write: if false; }
   }
 }
