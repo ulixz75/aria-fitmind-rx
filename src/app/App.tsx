@@ -444,6 +444,9 @@ function Shell({
 
       <main className="page">
         {children}
+        <footer style={{ marginTop: "50px", padding: "20px 0 10px", borderTop: "1px solid #ffffff05", textAlign: "center", fontSize: "11px", color: "#6f7b8c" }}>
+          Ejercicios provistos por <a href="https://gymvisual.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#7cf7d4", textDecoration: "none" }}>Gym Visual</a>
+        </footer>
       </main>
     </div>
   );
