@@ -34,6 +34,7 @@ import { ProgramsPage } from "../features/admin/ProgramsPage";
 import { AdminClientsPage } from "../features/admin/AdminClientsPage";
 
 import { MyProgramPage } from "../features/client/MyProgramPage";
+import { ExerciseDetailPage } from "../features/client/ExerciseDetailPage";
 
 /* ============================================================
    APP SHELL
@@ -779,6 +780,15 @@ function AuthenticatedRoutes() {
           element={
             <ClientGuard>
               <MyProgramPage />
+            </ClientGuard>
+          }
+        />
+
+        <Route
+          path="/exercises/:exerciseId"
+          element={
+            <ClientGuard>
+              <ExerciseDetailPage />
             </ClientGuard>
           }
         />

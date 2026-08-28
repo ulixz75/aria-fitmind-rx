@@ -5,8 +5,14 @@ import {
   Clock3,
   Dumbbell,
   Play,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import {
+  ExerciseDetailContent,
+  type ExerciseDetailView,
+} from "./ExerciseDetailPage";
 
 import { useAuth } from "../../context/AuthContext";
 
@@ -49,6 +55,12 @@ export function MyProgramPage() {
 
   const [error, setError] =
     useState<string | null>(null);
+
+  const [selectedExercise, setSelectedExercise] =
+    useState<ExerciseDetailView | null>(null);
+
+  const [detailLoading, setDetailLoading] =
+    useState(false);
 
   useEffect(() => {
     const uid = firebaseUser?.uid;
@@ -185,6 +197,119 @@ export function MyProgramPage() {
      */
     return 0;
   }, [programDays]);
+
+  /* ==========================================================
+     OPEN EXERCISE DETAIL (modal)
+     Uses already-loaded exercise when available to avoid
+     an extra Firestore read; otherwise falls back to
+     resolveStorageUrl for animation/gif.
+     ========================================================== */
+
+  async function handleViewExercise(
+    view: ProgramExerciseView,
+  ) {
+    // If we already have the exercise doc, reuse it
+    const baseExercise = view.exercise;
+
+    // Exercise doc missing (deleted/unavailable)
+    if (!baseExercise) {
+      // Still show a minimal fallback modal
+      setSelectedExercise({
+        id: view.programExercise.exerciseId,
+        name: "Exercise unavailable",
+        slug: "",
+        description:
+          "This exercise could not be loaded. It may have been removed from the library.",
+        category: "",
+        bodyPart: "",
+        forceType: "",
+        mechanic: "",
+        difficulty: "",
+        primaryMuscles: [],
+        secondaryMuscles: [],
+        equipment: [],
+        instructions: [],
+        tips: [],
+        goals: [],
+        tags: [],
+        synonyms: [],
+        isUnilateral: false,
+        isBodyweight: false,
+        animation: false,
+        animationType: "",
+        met: null,
+        media: {},
+        active: false,
+        source: "",
+        previewUrl: view.previewUrl,
+        animationUrl: null,
+      });
+      return;
+    }
+
+    setDetailLoading(true);
+
+    try {
+      const previewPath =
+        baseExercise.media?.classic?.start ??
+        baseExercise.media?.flat?.start ??
+        baseExercise.media?.classic?.peak ??
+        baseExercise.media?.flat?.peak ??
+        baseExercise.media?.thumbnail ??
+        null;
+
+      // previewUrl already resolved for the card; re-use or resolve
+      const previewUrl =
+        view.previewUrl ??
+        (await resolveStorageUrl(previewPath));
+
+      const animationUrl =
+        await resolveStorageUrl(
+          baseExercise.media?.animation ??
+            baseExercise.media?.gif ??
+            null,
+        );
+
+      setSelectedExercise({
+        ...baseExercise,
+        previewUrl,
+        animationUrl,
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  function closeExerciseDetail() {
+    setSelectedExercise(null);
+  }
+
+  /* Close on ESC */
+  useEffect(() => {
+    if (!selectedExercise) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeExerciseDetail();
+    }
+
+    window.addEventListener(
+      "keydown",
+      onKeyDown,
+    );
+    // Lock scroll
+    const prevOverflow =
+      document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        onKeyDown,
+      );
+      document.body.style.overflow =
+        prevOverflow;
+    };
+  }, [selectedExercise]);
 
   if (loading) {
     return (
@@ -454,15 +579,21 @@ export function MyProgramPage() {
                       </div>
                     </div>
 
-                    <Link
-                      to={`/exercises/${exercise?.id ?? config.exerciseId}`}
+                    <button
+                      type="button"
                       className="secondary-button"
+                      disabled={detailLoading}
+                      onClick={() =>
+                        void handleViewExercise(
+                          exerciseView,
+                        )
+                      }
                     >
                       View
                       <ChevronRight
                         size={15}
                       />
-                    </Link>
+                    </button>
                   </article>
                 );
               },
@@ -561,6 +692,41 @@ export function MyProgramPage() {
             )}
           </div>
         </section>
+      )}
+
+      {/* ======================================================
+          EXERCISE DETAIL MODAL (client-friendly)
+          ====================================================== */}
+
+      {selectedExercise && (
+        <div
+          className="exercise-modal-backdrop"
+          onClick={closeExerciseDetail}
+          role="presentation"
+        >
+          <div
+            className="exercise-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedExercise.name}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Close exercise details"
+              onClick={closeExerciseDetail}
+            >
+              <X size={20} />
+            </button>
+
+            <ExerciseDetailContent
+              exercise={selectedExercise}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
