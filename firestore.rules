@@ -49,7 +49,29 @@ service cloud.firestore {
 
     /* ============================================================
        USERS
+       ------------------------------------------------------------
+       Campos de plan (plan, planStatus, trialEndsAt,
+       sessionsLimit, currentPeriodEnd, stripeCustomerId):
+       SOLO escribibles por backend (webhook Stripe con
+       Admin SDK). El dueño solo puede incrementar contadores
+       de uso con tope; el resto de campos sigue la regla base.
        ============================================================ */
+
+    function planFieldsUnchanged() {
+      return request.resource.data.get('plan', null) == resource.data.get('plan', null)
+        && request.resource.data.get('planStatus', null) == resource.data.get('planStatus', null)
+        && request.resource.data.get('trialEndsAt', null) == resource.data.get('trialEndsAt', null)
+        && request.resource.data.get('sessionsLimit', null) == resource.data.get('sessionsLimit', null)
+        && request.resource.data.get('currentPeriodEnd', null) == resource.data.get('currentPeriodEnd', null)
+        && request.resource.data.get('stripeCustomerId', null) == resource.data.get('stripeCustomerId', null);
+    }
+
+    function usageOnlyIncreases() {
+      return request.resource.data.get('trialSecondsUsed', 0) >= resource.data.get('trialSecondsUsed', 0)
+        && request.resource.data.get('trialSecondsUsed', 0) <= 60
+        && request.resource.data.get('sessionsUsed', 0) >= resource.data.get('sessionsUsed', 0)
+        && request.resource.data.get('sessionsUsed', 0) <= resource.data.get('sessionsLimit', 8);
+    }
 
     match /users/{uid} {
 
@@ -73,10 +95,24 @@ service cloud.firestore {
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.role == resource.data.role
           && request.resource.data.status == resource.data.status
+          && planFieldsUnchanged()
+          && usageOnlyIncreases()
         );
 
       allow delete:
         if isAdmin();
+    }
+
+    /* ============================================================
+       STRIPE PENDING
+       ------------------------------------------------------------
+       Pagos recibidos antes del registro. Solo backend.
+       Clientes sin acceso (default deny la cubriría, se
+       explicita por claridad).
+       ============================================================ */
+
+    match /stripePending/{id} {
+      allow read, write: if false;
     }
 
     /* ============================================================
