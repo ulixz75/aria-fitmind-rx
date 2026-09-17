@@ -165,18 +165,28 @@ service cloud.firestore {
        WORKOUT SESSIONS
        ============================================================ */
 
-   match /workoutSessions/{sessionId} {
+    match /workoutSessions/{sessionId} {
 
   allow read:
     if isAdmin()
     || (
       isActive()
       && resource.data.clientId == request.auth.uid
+    )
+    || (
+      signedIn()
+      && resource.data.uid == request.auth.uid
     );
 
   allow create:
-    if isActive()
-    && request.resource.data.clientId == request.auth.uid;
+    if (
+      isActive()
+      && request.resource.data.clientId == request.auth.uid
+    )
+    || (
+      signedIn()
+      && request.resource.data.uid == request.auth.uid
+    );
 
   allow update, delete:
     if isAdmin()
@@ -342,6 +352,34 @@ service cloud.firestore {
 
       allow create, update, delete:
         if isAdmin();
+    }
+
+    /* ============================================================
+       ARIA PROGRAMS (colecciones propias de la PWA ARIA,
+       separadas del modelo legacy de programas)
+       ============================================================ */
+
+    match /ariaPrograms/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /ariaProgramAssignments/{uid} {
+      allow read:
+        if isAdmin()
+        || (signedIn() && request.auth.uid == uid);
+      allow create, delete:
+        if isAdmin();
+      // El dueño solo puede avanzar de semana en +1, sin tocar el resto.
+      allow update:
+        if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.week == resource.data.week + 1
+          && request.resource.data.programId == resource.data.programId
+          && request.resource.data.uid == resource.data.uid
+        );
     }
 
     /* ============================================================
