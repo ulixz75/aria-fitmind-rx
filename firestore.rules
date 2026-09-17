@@ -73,6 +73,24 @@ service cloud.firestore {
         && request.resource.data.get('sessionsUsed', 0) <= resource.data.get('sessionsLimit', 8);
     }
 
+    /*
+     * Fusión pay-first: el dueño solo puede escribir campos de plan
+     * copiando VALORES IDÉNTICOS al pending que escribió el backend
+     * (id = email en minúsculas). Luego el cliente elimina el pending:
+     * un solo uso, sin auto-otorgamiento posible.
+     */
+    function copiesOwnPending() {
+      return exists(/databases/$(database)/documents/stripePending/$(request.auth.token.email))
+        && request.resource.data.plan == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.plan
+        && request.resource.data.planStatus == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.planStatus
+        && request.resource.data.get('trialEndsAt', null) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('trialEndsAt', null)
+        && request.resource.data.get('trialSecondsUsed', 0) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('trialSecondsUsed', 0)
+        && request.resource.data.get('sessionsLimit', 8) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('sessionsLimit', 8)
+        && request.resource.data.get('sessionsUsed', 0) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('sessionsUsed', 0)
+        && request.resource.data.get('currentPeriodEnd', null) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('currentPeriodEnd', null)
+        && request.resource.data.get('stripeCustomerId', null) == get(/databases/$(database)/documents/stripePending/$(request.auth.token.email)).data.get('stripeCustomerId', null);
+    }
+
     match /users/{uid} {
 
       allow create:
@@ -95,7 +113,7 @@ service cloud.firestore {
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.role == resource.data.role
           && request.resource.data.status == resource.data.status
-          && planFieldsUnchanged()
+          && (planFieldsUnchanged() || copiesOwnPending())
           && usageOnlyIncreases()
         );
 
@@ -106,13 +124,17 @@ service cloud.firestore {
     /* ============================================================
        STRIPE PENDING
        ------------------------------------------------------------
-       Pagos recibidos antes del registro. Solo backend.
-       Clientes sin acceso (default deny la cubriría, se
-       explicita por claridad).
+       Pagos recibidos antes del registro (id = email en
+       minúsculas). Solo lectura/eliminación del propio email;
+       creación/actualización solo backend. La copia a users/
+       se verifica valor por valor en copiesOwnPending().
        ============================================================ */
 
     match /stripePending/{id} {
-      allow read, write: if false;
+      allow get, delete: if signedIn()
+        && request.auth.token.email != null
+        && resource.data.email == request.auth.token.email;
+      allow list, create, update: if false;
     }
 
     /* ============================================================
